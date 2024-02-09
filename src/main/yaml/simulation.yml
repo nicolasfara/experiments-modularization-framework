@@ -68,6 +68,12 @@ export:
         aggregators: [mean, min, max]
         value-filter: onlyfinite
 
+monitors:
+  type: SwingGUI
+  parameters:
+    graphics: effects/simulation.json
+    failOnHeadless: false
+
 terminate:
   type: AfterTime
   parameters: 150
