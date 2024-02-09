@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream
 
 plugins {
     application
+    scala
     alias(libs.plugins.gitSemVer)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.qa)
@@ -21,7 +22,6 @@ sourceSets {
     main {
         resources {
             srcDir("src/main/protelis")
-            srcDir("src/main/scala")
         }
     }
 }
@@ -36,7 +36,7 @@ val usesJvm: Int = File(File(projectDir, "docker/sim"), "Dockerfile")
     .toInt()
 
 multiJvm {
-    jvmVersionForCompilation.set(usesJvm)
+    jvmVersionForCompilation.set(17)
 }
 
 dependencies {
