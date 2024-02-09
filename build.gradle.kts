@@ -40,7 +40,7 @@ multiJvm {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(libs.bundles.alchemist.protelis)
+    implementation(libs.bundles.alchemist)
     if (!GraphicsEnvironment.isHeadless()) {
         implementation("it.unibo.alchemist:alchemist-swingui:${libs.versions.alchemist.get()}")
     }
@@ -77,33 +77,44 @@ val runAllBatch by tasks.register<DefaultTask>("runAllBatch") {
     group = alchemistGroup
     description = "Launches all experiments"
 }
-
 /*
  * Scan the folder with the simulation files, and create a task for each one of them.
  */
 File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
-    .orEmpty()
-    .filter { it.extension == "yaml" }
-    .sortedBy { it.nameWithoutExtension }
-    .forEach {
-        val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.capitalizeString()}") {
-            javaLauncher.set(
-                javaToolchains.launcherFor {
-                    languageVersion.set(JavaLanguageVersion.of(multiJvm.latestJava))
-                },
-            )
+    ?.filter { it.extension == "yaml" }
+    ?.sortedBy { it.nameWithoutExtension }
+    ?.forEach {
+        fun basetask(name: String, additionalConfiguration: JavaExec.() -> Unit = {}) = tasks.register<JavaExec>(name) {
             group = alchemistGroup
-            description = "Launches simulation ${it.nameWithoutExtension}"
+            description = "Launches graphic simulation ${it.nameWithoutExtension}"
             mainClass.set("it.unibo.alchemist.Alchemist")
             classpath = sourceSets["main"].runtimeClasspath
-            val exportsDir = File("${projectDir.path}/build/exports/${it.nameWithoutExtension}")
-            doFirst {
-                if (!exportsDir.exists()) {
-                    exportsDir.mkdirs()
-                }
-            }
             args("run", it.absolutePath)
-            outputs.dir(exportsDir)
+            javaLauncher.set(
+                javaToolchains.launcherFor {
+                    languageVersion.set(JavaLanguageVersion.of(usesJvm))
+                },
+            )
+            if (System.getenv("CI") == "true") {
+                args("--override", "terminate: { type: AfterTime, parameters: [2] } ")
+            } else {
+                this.additionalConfiguration()
+            }
         }
-        runAll.dependsOn(task)
+        val capitalizedName = it.nameWithoutExtension.capitalized()
+        val graphic by basetask("run${capitalizedName}Graphic") {
+            args(
+                "--override",
+                "monitors: { type: SwingGUI, parameters: { graphics: effects/${it.nameWithoutExtension}.json } }",
+                "--override",
+                "launcher: { parameters: { batch: [], autoStart: false } }",
+            )
+        }
+        runAllGraphic.dependsOn(graphic)
+        val batch by basetask("run${capitalizedName}Batch") {
+            description = "Launches batch experiments for $capitalizedName"
+            maxHeapSize = "${minOf(heap.toInt(), Runtime.getRuntime().availableProcessors() * taskSize)}m"
+            File("data").mkdirs()
+        }
+        runAllBatch.dependsOn(batch)
     }

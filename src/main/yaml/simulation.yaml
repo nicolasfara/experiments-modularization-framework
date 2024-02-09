@@ -17,9 +17,9 @@ seeds:
   scenario: *seed
   simulation: *seed
 
-launcher:
-  parameters:
-    batch: [seed, spacing, error]
+#launcher:
+#  parameters:
+#    batch: [seed, spacing, error]
 
 network-model:
   type: ConnectWithinDistance
@@ -47,7 +47,7 @@ deployments:
       concentration: true
   programs: *gradient
 
-export:
+#export:
 #  - type: MongoDBExporter
 #    parameters:
 #      uri: mongodb://localhost:27017
@@ -57,23 +57,20 @@ export:
 #      - molecule: "org:protelis:tutorial:distanceTo"
 #        aggregators: [mean, min, max]
 #        value-filter: onlyfinite
-  - type: CSVExporter
-    parameters:
-      fileNameRoot: simulation
-      interval: 1
-      exportPath: data
-    data:
-      - time
-      - molecule: "org:protelis:tutorial:distanceTo"
-        aggregators: [mean, min, max]
-        value-filter: onlyfinite
+#  - type: CSVExporter
+#    parameters:
+#      fileNameRoot: simulation
+#      interval: 1
+#      exportPath: data
+#    data:
+#      - time
+#      - molecule: "org:protelis:tutorial:distanceTo"
+#        aggregators: [mean, min, max]
+#        value-filter: onlyfinite
 
 monitors:
   type: SwingGUI
-  parameters:
-    graphics: effects/simulation.json
-    failOnHeadless: false
-
-terminate:
-  type: AfterTime
-  parameters: 150
+#
+#terminate:
+#  type: AfterTime
+#  parameters: 150
