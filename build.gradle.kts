@@ -21,6 +21,7 @@ sourceSets {
     main {
         resources {
             srcDir("src/main/protelis")
+            srcDir("src/main/scala")
         }
     }
 }
