@@ -7,6 +7,7 @@ class DilateModule extends AggregateProgram
   with StandardSensors with ScafiAlchemistSupport with BlockG with Gradients with FieldUtils with ExplicitFields {
 
   import Field._
+  import InfrastructureMock._
   /**
    * Taking a field resulting from the gradient between two points, this module
    * computes the channel with a width.

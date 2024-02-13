@@ -6,6 +6,8 @@ import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 class GradientModule extends AggregateProgram
   with StandardSensors with ScafiAlchemistSupport with BlockG with Gradients with FieldUtils with ExplicitFields {
 
+  import InfrastructureMock._
+
   /**
    * Module computing the gradient between a source and a destination.
    * @return a field containing the gradient values between two points.
