@@ -92,6 +92,3 @@ export:
       - molecule: g
         aggregators: [mean]
         value-filter: onlyfinite
-
-monitors:
-  type: SwingGUI

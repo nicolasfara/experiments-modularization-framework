@@ -68,8 +68,6 @@ deployments:
 #        aggregators: [mean, min, max]
 #        value-filter: onlyfinite
 
-monitors:
-  type: SwingGUI
 #
 #terminate:
 #  type: AfterTime
