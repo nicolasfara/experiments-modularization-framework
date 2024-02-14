@@ -16,6 +16,7 @@ variables:
 _constants:
   source: &source 0
   destination: &destination 2
+  width: &width 20.0
   retentionTime: &retentionTime 5.0
   programRate1: &programRate1 1.0
   programRate2: &programRate2 2.0
@@ -30,6 +31,9 @@ seeds:
 #environment:
 #  type: OSMEnvironment
 #  parameters: ["vcm.pbf", false]
+environment:
+  type: Continuous2DEnvironment
+  parameters: []
 
 network-model:
   type: ConnectWithinDistanceAndCloud #*connectionType
@@ -55,31 +59,64 @@ _reactions:
             parameters: [it.unibo.sim.Channel2, *retentionTime]
       - program: send
 
+
 deployments: ## i.e, how to place nodes
-  - type: Point
-    parameters: [0,0]
-    programs: ## the reactions installed in each nodes
-      - *channel1
-      - *channel2
-    contents:
-      - molecule: test
-        concentration: *source
-      - molecule: destination
-        concentration: *destination
-      - molecule: g
-        concentration: Double.PositiveInfinity
-      - molecule: nodeType
-        concentration: 0
-  - type: Point
-    parameters: [50,0]
-  - type: Point
-    parameters: [100,0]
-  - type: Point # CLOUD
-    parameters: [50,200]
-    programs: []
-    contents:
-      - molecule: nodeType
-        concentration: 1
+  parameters:
+    - type: Point
+      parameters: [0,0]
+      programs:
+        - *channel1
+        - *channel2
+      contents: 
+        shared: &shared
+          - molecule: source
+            concentration: *source
+          - molecule: destination
+            concentration: *destination
+          - molecule: width
+            concentration: *width
+          - molecule: g
+            concentration: Double.PositiveInfinity
+          - molecule: nodeType
+            concentration: 0
+    - type: Point
+      parameters: [50,0]
+      programs:
+        - *channel1
+        - *channel2
+      contents: *shared
+    - type: Point
+      parameters: [100,0]
+      programs:
+        - *channel1
+        - *channel2
+      contents: *shared
+    - type: Point
+      parameters: [0,50]
+      programs:
+        - *channel1
+        - *channel2
+      contents: *shared
+    - type: Point
+      parameters: [50,50]
+      programs:
+        - *channel1
+        - *channel2
+      contents: *shared
+    - type: Point
+      parameters: [100,50]
+      programs:
+        - *channel1
+        - *channel2
+      contents: *shared
+    - type: Point # CLOUD
+      parameters: [50,200]
+      programs: []
+      contents:
+          shared: *shared
+          just-here:
+            - molecule: nodeType
+              concentration: 1 #cloud
 
 export:
   - type: CSVExporter
