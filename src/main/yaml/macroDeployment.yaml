@@ -75,7 +75,7 @@ deployments: ## i.e, how to place nodes
     - type: Point
       parameters: [0,0]
       programs:
-        #- *channel1
+        - *channel1 ## consider offloading
         - *channel2
       contents: 
         shared: &shared
@@ -124,7 +124,7 @@ deployments: ## i.e, how to place nodes
     - type: Point # CLOUD
       parameters: [50,200]
       programs:
-        - *dev0channel1
+        #- *dev0channel1
         - *dev4channel2
       contents:
         shared: *shared

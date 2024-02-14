@@ -107,9 +107,12 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   override def cloneAction(node: Node[T], reaction: Reaction[T]) =
     new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf)
 
+  var forwardTo: Option[Node[T]] = None
+
   override def execute(): Unit = {
     if(referenceNode != node) {
       println(s"Node ${node.getId()} is a surrogate of ${referenceNode.getId()} and so has to forward to it")
+      forwardTo = Some(referenceNode)
     }
     val dependencies = dependencyGraph.getOrElse(programName, List.empty)
     if(referenceNode == node) {
@@ -121,10 +124,12 @@ sealed class RunScafiProgram[T, P <: Position[P]](
         if physicalNbr.getId() != node.getId()
       } {
         println(s"Node ${node.getId()} is running $programName and has to forward to ${physicalNbr.getId()} to support $action")
+        forwardTo = Some(physicalNbr)
       }
     } else {
       // offloading: needs to forward to the reference node
       println(s"Surrogate node ${node.getId()} is running $programName and has to forward to the original node ${referenceNode.getId()}")
+      forwardTo = Some(referenceNode)
     }
 
     import scala.jdk.CollectionConverters._
