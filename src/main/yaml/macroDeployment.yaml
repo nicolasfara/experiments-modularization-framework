@@ -46,14 +46,14 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.sim.Channel1, *retentionTime]
+            parameters: [it.unibo.sim.Channel1, *retentionTime, -1]
       - program: send
   - program: &channel2
       - time-distribution: *programRate2
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.sim.Channel2, *retentionTime]
+            parameters: [it.unibo.sim.Channel2, *retentionTime, -1]
       - program: send
   - program: &dev4channel2
       - time-distribution: *programRate2
@@ -67,7 +67,7 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.sim.Channel1, *retentionTime, 0, [it.unibo.sim.Channel2]]
+            parameters: [it.unibo.sim.Channel1, *retentionTime, 0]
       - program: send
 
 deployments: ## i.e, how to place nodes

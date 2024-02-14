@@ -23,6 +23,8 @@ import org.kaikikm.threadresloader.ResourceLoader
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Try}
+import java.util.stream.Collectors
+import scala.jdk.CollectionConverters._
 
 sealed class DefaultRunScafiProgram[P <: Position[P]](
     environment: Environment[Any, P],
@@ -31,9 +33,8 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
     randomGenerator: RandomGenerator,
     programName: String,
     retentionTime: Double,
-    surrogateOf: ID,
-    downstreams: List[String] = List.empty
-) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf, downstreams) {
+    surrogateOf: ID
+) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf) {
 
   def this(
       environment: Environment[Any, P],
@@ -49,8 +50,7 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
       randomGenerator,
       programName,
       FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate),
-      node.getId(),
-      List.empty
+      node.getId()
     )
   }
 }
@@ -62,8 +62,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     randomGenerator: RandomGenerator,
     programName: String,
     retentionTime: Double,
-    surrogateOf: ID,
-    downstreams: List[String] = List.empty
+    surrogateOfDevice: ID
 ) extends AbstractLocalAction[T](node) {
 
   def this(
@@ -80,12 +79,12 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       randomGenerator,
       programName,
       FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate),
-      node.getId(),
-      List.empty
+      node.getId()
     )
   }
 
   import RunScafiProgram.NeighborData
+  val surrogateOf = surrogateOfDevice
   val program =
     ResourceLoader.classForName(programName).getDeclaredConstructor().newInstance().asInstanceOf[CONTEXT => EXPORT]
   val programNameMolecule = new SimpleMolecule(programName)
@@ -97,11 +96,21 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   declareDependencyTo(Dependency.EVERY_MOLECULE)
 
   val dependencyGraph = nodeManager.getOrElse[Map[String,List[String]]]("dependencyGraph", Map.empty)
+  if(referenceNode != node) {
+    println(s"Node ${node.getId()} is a surrogate of ${referenceNode.getId()}")
+  }
+  val dependencies = dependencyGraph.getOrElse(programName, List.empty)
+  for {
+    physicalNbr <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
+    action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](physicalNbr).intersect(dependencies)
+  } {
+    println(s"Node ${node.getId()} has to forward to ${physicalNbr.getId()} concerning $action")
+  }
 
   def asMolecule = programNameMolecule
 
   override def cloneAction(node: Node[T], reaction: Reaction[T]) =
-    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf, downstreams)
+    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf)
 
   override def execute(): Unit = {
     import scala.jdk.CollectionConverters._
