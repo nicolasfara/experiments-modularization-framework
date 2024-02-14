@@ -7,7 +7,7 @@ variables:
     step: 1
     default: 2
   range: &range
-    formula: 100
+    formula: 65
     language: scala
   moveFrequency: &moveFrequency
     formula: 1
@@ -98,7 +98,7 @@ deployments: ## i.e, how to place nodes
         - *channel2
       contents: *shared
     - type: Point
-      parameters: [100,0]
+      parameters: [100,-20]
       programs:
         - *channel1
         - *channel2
