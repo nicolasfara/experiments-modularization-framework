@@ -33,8 +33,7 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
     randomGenerator: RandomGenerator,
     programName: String,
     retentionTime: Double,
-    surrogateOf: ID
-) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf) {
+) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime) {
 
   def this(
       environment: Environment[Any, P],
@@ -49,9 +48,7 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
       reaction,
       randomGenerator,
       programName,
-      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate),
-      node.getId()
-    )
+      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate))
   }
 }
 
@@ -61,9 +58,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     reaction: Reaction[T],
     randomGenerator: RandomGenerator,
     programName: String,
-    retentionTime: Double,
-    surrogateOfDevice: ID
-) extends AbstractLocalAction[T](node) {
+    retentionTime: Double) extends AbstractLocalAction[T](node) {
 
   def this(
       environment: Environment[T, P],
@@ -78,13 +73,12 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       reaction,
       randomGenerator,
       programName,
-      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate),
-      node.getId()
+      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate)
     )
   }
 
   import RunScafiProgram.NeighborData
-  val surrogateOf = surrogateOfDevice
+  val surrogateOf = node.getId() // node.getConcentration(new SimpleMolecule("surrogateFor")).asInstanceOf[Set[ID]]
   val program =
     ResourceLoader.classForName(programName).getDeclaredConstructor().newInstance().asInstanceOf[CONTEXT => EXPORT]
   val programNameMolecule = new SimpleMolecule(programName)
@@ -110,7 +104,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   def asMolecule = programNameMolecule
 
   override def cloneAction(node: Node[T], reaction: Reaction[T]) =
-    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf)
+    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime)
 
   override def execute(): Unit = {
     import scala.jdk.CollectionConverters._
