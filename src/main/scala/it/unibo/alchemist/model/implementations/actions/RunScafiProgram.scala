@@ -33,8 +33,7 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
     programName: String,
     retentionTime: Double,
     surrogateOf: ID,
-    downstreams: List[String] = List.empty
-) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf, downstreams) {
+) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf) {
 
   def this(
       environment: Environment[Any, P],
@@ -50,8 +49,7 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
       randomGenerator,
       programName,
       FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate),
-      node.getId(),
-      List.empty
+      node.getId()
     )
   }
 }
@@ -63,9 +61,12 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     randomGenerator: RandomGenerator,
     val programName: String,
     retentionTime: Double,
-    val surrogateOf: ID,
-    downstreams: List[String] = List.empty
+    surrogateOfDevice: ID
 ) extends AbstractLocalAction[T](node) {
+
+  val surrogateOf = if(surrogateOfDevice >= 0) surrogateOfDevice else node.getId()
+
+  /*
 
   def this(
       environment: Environment[T, P],
@@ -85,6 +86,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       List.empty
     )
   }
+   */
 
   import RunScafiProgram.NeighborData
   val program =
@@ -103,20 +105,26 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   def asMolecule = programNameMolecule
 
   override def cloneAction(node: Node[T], reaction: Reaction[T]) =
-    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf, downstreams)
+    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf)
 
   override def execute(): Unit = {
     if(referenceNode != node) {
-      println(s"Node ${node.getId()} is a surrogate of ${referenceNode.getId()}")
+      println(s"Node ${node.getId()} is a surrogate of ${referenceNode.getId()} and so has to forward to it")
     }
     val dependencies = dependencyGraph.getOrElse(programName, List.empty)
-    for {
-      physicalNbr <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
-      action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](physicalNbr)
-        .map(p => (p.programName, p.surrogateOf)).filter(_._2 == referenceNode.getId()).map(_._1).intersect(dependencies)
-      if physicalNbr.getId() != node.getId()
-    } {
-      println(s"Node ${node.getId()} has to forward to ${physicalNbr.getId()} concerning $action")
+    if(referenceNode == node) {
+      // no offloading: but may need to forward to offloaded programs
+      for {
+        physicalNbr <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
+        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](physicalNbr)
+          .map(p => (p.programName, p.surrogateOf)).filter(_._2 == referenceNode.getId()).map(_._1).intersect(dependencies)
+        if physicalNbr.getId() != node.getId()
+      } {
+        println(s"Node ${node.getId()} is running $programName and has to forward to ${physicalNbr.getId()} to support $action")
+      }
+    } else {
+      // offloading: needs to forward to the reference node
+      println(s"Surrogate node ${node.getId()} is running $programName and has to forward to the original node ${referenceNode.getId()}")
     }
 
     import scala.jdk.CollectionConverters._
