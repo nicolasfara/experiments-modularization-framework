@@ -7,3 +7,4 @@ charts/
 data_summary_*
 timeprocessed
 .metals
+.vscode/

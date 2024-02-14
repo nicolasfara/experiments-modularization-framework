@@ -1,0 +1,130 @@
+incarnation: scafi
+
+variables:
+  random: &random
+    min: 0
+    max: 5
+    step: 1
+    default: 2
+  range: &range
+    formula: 100
+    language: scala
+  moveFrequency: &moveFrequency
+    formula: 1
+    language: scala
+
+_constants:
+  source: &source 0
+  destination: &destination 2
+  retentionTime: &retentionTime 5.0
+  programRate1: &programRate 1.0
+  programRate2: &programRate 2.0
+  exportInterval: &exportInterval 1.0
+  totalNodes: &totalNodes 1497
+  timeToAlign: &timeToAlign 1365922800
+
+seeds:
+  scenario: *random
+  simulation: *random
+
+#environment:
+#  type: OSMEnvironment
+#  parameters: ["vcm.pbf", false]
+
+network-model:
+  type: ConnectWithinDistanceAndCloud #*connectionType
+  parameters: [*range]
+
+_reactions:
+  - program: &channel1
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [*programRate1]
+        type: Event
+        actions:
+          - type: RunMacroScafiProgram
+            parameters: [it.unibo.sim.Channel1, *retentionTime]
+      - program: send
+  - program: &channel2
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [*programRate2]
+        type: Event
+        actions:
+          - type: RunMacroScafiProgram
+            parameters: [it.unibo.sim.Channel2, *retentionTime]
+      - program: send
+
+deployments: ## i.e, how to place nodes
+  - type: Point
+    parameters: [0,0]
+    programs: ## the reactions installed in each nodes
+      - *channel1
+      - *channel2
+    contents:
+      - molecule: test
+        concentration: *source
+      - molecule: destination
+        concentration: *destination
+      - molecule: g
+        concentration: Double.PositiveInfinity
+      - molecule: nodeType
+        concentration: 0
+  - type: Point
+    parameters: [50,0]
+    programs: ## the reactions installed in each nodes
+      - *channel1
+      - *channel2
+    contents:
+      - molecule: source
+        concentration: *source 
+      - molecule: destination
+        concentration: *destination
+      - molecule: g
+        concentration: Double.PositiveInfinity
+      - molecule: nodeType
+        concentration: 0
+  - type: Point
+    parameters: [100,0]
+    programs: ## the reactions installed in each nodes
+      - *channel1
+      - *channel2
+    contents:
+      - molecule: source
+        concentration: *source
+      - molecule: destination
+        concentration: *destination
+      - molecule: g
+        concentration: Double.PositiveInfinity
+      - molecule: nodeType
+        concentration: 0
+  - type: Point
+    parameters: [50,200]
+    programs: ## the reactions installed in each nodes
+      - *program
+    contents:
+      - molecule: source
+        concentration: *source
+      - molecule: destination
+        concentration: *destination
+      - molecule: g
+        concentration: Double.PositiveInfinity
+      - molecule: nodeType
+        concentration: 0
+
+export:
+  - type: CSVExporter
+    parameters:
+      fileNameRoot: "experiment"
+      exportPath: "build/exports/macroDeployment"
+      fileExtension: "txt"
+      interval: *exportInterval
+    data:
+      - time
+      - type: NumberOfNodes
+      - molecule: g
+        aggregators: [sum]
+        value-filter: onlyfinite
+      - molecule: g
+        aggregators: [mean]
+        value-filter: onlyfinite
