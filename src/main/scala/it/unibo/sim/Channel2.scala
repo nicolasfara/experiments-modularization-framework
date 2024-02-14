@@ -9,7 +9,7 @@ class Channel2 extends MyAggregateProgram {
     val source = sense[Int]("source") == mid()
     val destination = sense[Int]("destination") == mid()
     val width = sense[Double]("width")
-    val localDistanceValue = senseOr[Double]("it.unibo.scafi.sim.Channel1", Double.PositiveInfinity)
+    val localDistanceValue = senseOr[Double]("it.unibo.sim.Channel1", Double.PositiveInfinity)
     val result = localDistanceValue <= distanceBetween(source, destination) + width
     result
   }

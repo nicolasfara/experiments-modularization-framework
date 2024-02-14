@@ -9,11 +9,17 @@ class Channel1 extends MyAggregateProgram {
     val sourceId = sense[Int]("source")
     val destinationId = sense[Int]("destination")
     val width = sense[Double]("width")
+
     val isSource = sourceId == mid()
     val isDestination = destinationId == mid()
     node.put("isSource", isSource)
     node.put("isDestination", isDestination)
-    val result = distanceTo(isSource) + distanceTo(isDestination)
+    val distanceToSource = distanceTo(isSource)
+    val distanceToDestination = distanceTo(isDestination)
+    node.put("distanceToSource", distanceToSource)
+    node.put("distanceToDestination", distanceToDestination)
+
+    val result = distanceToSource + distanceToDestination
     result
   }
 }
