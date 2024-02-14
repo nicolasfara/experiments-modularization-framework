@@ -94,12 +94,13 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   val programNameMolecule = new SimpleMolecule(programName)
   val referenceNode = if(node.getId() == surrogateOf) node else environment.getNodeByID(surrogateOf)
   println(s"Node ${node.getId()} is a surrogate of ${referenceNode.getId()} (same as $surrogateOf) concerning $programName")
-  lazy val nodeManager = new SimpleNodeManager(referenceNode)
+  lazy val nodeManager = new SimpleNodeManager(node) // node manager provides access to local node data
   private var neighborhoodManager: Map[ID, NeighborData[P]] = Map()
   private val commonNames = new ScafiIncarnationForAlchemist.StandardSensorNames {}
   private var completed = false
   declareDependencyTo(Dependency.EVERY_MOLECULE)
 
+  // We assume all the nodes have the application dependency graph, capturing how modules are related
   val dependencyGraph = nodeManager.getOrElse[Map[String,List[String]]]("dependencyGraph", Map.empty)
 
   def asMolecule = programNameMolecule
