@@ -41,18 +41,14 @@ network-model:
 
 _reactions:
   - program: &channel1
-      - time-distribution:
-          type: ExponentialTime
-          parameters: [*programRate1]
+      - time-distribution: *programRate1
         type: Event
         actions:
           - type: RunScafiProgram
             parameters: [it.unibo.sim.Channel1, *retentionTime]
       - program: send
   - program: &channel2
-      - time-distribution:
-          type: ExponentialTime
-          parameters: [*programRate2]
+      - time-distribution: *programRate2
         type: Event
         actions:
           - type: RunScafiProgram
