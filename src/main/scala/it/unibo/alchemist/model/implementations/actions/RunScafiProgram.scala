@@ -23,6 +23,7 @@ import org.kaikikm.threadresloader.ResourceLoader
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Try}
+import scala.jdk.CollectionConverters._
 
 sealed class DefaultRunScafiProgram[P <: Position[P]](
     environment: Environment[Any, P],
@@ -60,9 +61,9 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     node: Node[T],
     reaction: Reaction[T],
     randomGenerator: RandomGenerator,
-    programName: String,
+    val programName: String,
     retentionTime: Double,
-    surrogateOf: ID,
+    val surrogateOf: ID,
     downstreams: List[String] = List.empty
 ) extends AbstractLocalAction[T](node) {
 
@@ -90,6 +91,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     ResourceLoader.classForName(programName).getDeclaredConstructor().newInstance().asInstanceOf[CONTEXT => EXPORT]
   val programNameMolecule = new SimpleMolecule(programName)
   val referenceNode = if(node.getId() == surrogateOf) node else environment.getNodeByID(surrogateOf)
+  println(s"Node ${node.getId()} is a surrogate of ${referenceNode.getId()} (same as $surrogateOf) concerning $programName")
   lazy val nodeManager = new SimpleNodeManager(referenceNode)
   private var neighborhoodManager: Map[ID, NeighborData[P]] = Map()
   private val commonNames = new ScafiIncarnationForAlchemist.StandardSensorNames {}
@@ -104,6 +106,19 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf, downstreams)
 
   override def execute(): Unit = {
+    if(referenceNode != node) {
+      println(s"Node ${node.getId()} is a surrogate of ${referenceNode.getId()}")
+    }
+    val dependencies = dependencyGraph.getOrElse(programName, List.empty)
+    for {
+      physicalNbr <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
+      action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](physicalNbr)
+        .map(p => (p.programName, p.surrogateOf)).filter(_._2 == referenceNode.getId()).map(_._1).intersect(dependencies)
+      if physicalNbr.getId() != node.getId()
+    } {
+      println(s"Node ${node.getId()} has to forward to ${physicalNbr.getId()} concerning $action")
+    }
+
     import scala.jdk.CollectionConverters._
     implicit def euclideanToPoint(point: P): Point3D = point.getDimensions match {
       case 1 => Point3D(point.getCoordinate(0), 0, 0)
