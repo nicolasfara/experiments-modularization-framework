@@ -4,7 +4,7 @@ import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 
 import scala.concurrent.duration.FiniteDuration
 
-class HelloScafi extends AggregateProgram
+class Channel1 extends AggregateProgram
   with StandardSensors with ScafiAlchemistSupport with BlockG with Gradients with FieldUtils {
   override def main(): Any = {
     val sourceId = sense[Int]("source")

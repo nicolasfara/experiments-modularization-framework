@@ -18,11 +18,11 @@ import it.unibo.alchemist.model.actions.AbstractAction
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters._
 
-class SendMacroScafiMessage[T, P <: Position[P]](
+class SendScafiMessage[T, P <: Position[P]](
     environment: Environment[T, P],
     device: ScafiDevice[T],
     reaction: Reaction[T],
-    val program: RunMacroScafiProgram[T, P]
+    val program: RunScafiProgram[T, P]
 ) extends AbstractAction[T](device.getNode) {
   assert(reaction != null, "Reaction cannot be null")
   assert(program != null, "Program cannot be null")
@@ -47,14 +47,14 @@ class SendMacroScafiMessage[T, P <: Position[P]](
         val possibleRef = destinationNode.getReactions
           .stream()
           .flatMap(reaction => reaction.getActions.stream())
-          .filter(action => action.isInstanceOf[RunMacroScafiProgram[_, _]])
-          .map(action => action.asInstanceOf[RunMacroScafiProgram[T, P]])
-          .collect(Collectors.toList[RunMacroScafiProgram[T, P]])
+          .filter(action => action.isInstanceOf[RunScafiProgram[_, _]])
+          .map(action => action.asInstanceOf[RunScafiProgram[T, P]])
+          .collect(Collectors.toList[RunScafiProgram[T, P]])
         if (possibleRef.size() == 1) {
           return new SendScafiMessage(environment, device, reaction, possibleRef.get(0))
         }
         throw new IllegalStateException(
-          "There must be one and one only unconfigured " + RunMacroScafiProgram.getClass.getSimpleName
+          "There must be one and one only unconfigured " + RunScafiProgram.getClass.getSimpleName
         )
       }
     )

@@ -24,14 +24,14 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Try}
 
-sealed class DefaultRunMacroScafiProgram[P <: Position[P]](
+sealed class DefaultRunScafiProgram[P <: Position[P]](
     environment: Environment[Any, P],
     node: Node[Any],
     reaction: Reaction[Any],
     randomGenerator: RandomGenerator,
     programName: String,
     retentionTime: Double
-) extends RunMacroScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime) {
+) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime) {
 
   def this(
       environment: Environment[Any, P],
@@ -51,7 +51,7 @@ sealed class DefaultRunMacroScafiProgram[P <: Position[P]](
   }
 }
 
-sealed class RunMacroScafiProgram[T, P <: Position[P]](
+sealed class RunScafiProgram[T, P <: Position[P]](
     environment: Environment[T, P],
     node: Node[T],
     reaction: Reaction[T],
@@ -77,7 +77,7 @@ sealed class RunMacroScafiProgram[T, P <: Position[P]](
     )
   }
 
-  import RunMacroScafiProgram.NeighborData
+  import RunScafiProgram.NeighborData
   val program =
     ResourceLoader.classForName(programName).getDeclaredConstructor().newInstance().asInstanceOf[CONTEXT => EXPORT]
   val programNameMolecule = new SimpleMolecule(programName)
@@ -90,7 +90,7 @@ sealed class RunMacroScafiProgram[T, P <: Position[P]](
   def asMolecule = programNameMolecule
 
   override def cloneAction(node: Node[T], reaction: Reaction[T]) =
-    new RunMacroScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime)
+    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime)
 
   override def execute(): Unit = {
     import scala.jdk.CollectionConverters._
@@ -201,7 +201,7 @@ sealed class RunMacroScafiProgram[T, P <: Position[P]](
 
 }
 
-object RunMacroScafiProgram {
+object RunScafiProgram {
   case class NeighborData[P <: Position[P]](exportData: EXPORT, position: P, executionTime: AlchemistTime)
 
   implicit class RichMap[K, V](map: Map[K, V]) {

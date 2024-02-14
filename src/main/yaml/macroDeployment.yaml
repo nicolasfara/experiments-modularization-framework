@@ -17,8 +17,8 @@ _constants:
   source: &source 0
   destination: &destination 2
   retentionTime: &retentionTime 5.0
-  programRate1: &programRate 1.0
-  programRate2: &programRate 2.0
+  programRate1: &programRate1 1.0
+  programRate2: &programRate2 2.0
   exportInterval: &exportInterval 1.0
   totalNodes: &totalNodes 1497
   timeToAlign: &timeToAlign 1365922800
@@ -42,7 +42,7 @@ _reactions:
           parameters: [*programRate1]
         type: Event
         actions:
-          - type: RunMacroScafiProgram
+          - type: RunScafiProgram
             parameters: [it.unibo.sim.Channel1, *retentionTime]
       - program: send
   - program: &channel2
@@ -51,7 +51,7 @@ _reactions:
           parameters: [*programRate2]
         type: Event
         actions:
-          - type: RunMacroScafiProgram
+          - type: RunScafiProgram
             parameters: [it.unibo.sim.Channel2, *retentionTime]
       - program: send
 
@@ -72,45 +72,14 @@ deployments: ## i.e, how to place nodes
         concentration: 0
   - type: Point
     parameters: [50,0]
-    programs: ## the reactions installed in each nodes
-      - *channel1
-      - *channel2
-    contents:
-      - molecule: source
-        concentration: *source 
-      - molecule: destination
-        concentration: *destination
-      - molecule: g
-        concentration: Double.PositiveInfinity
-      - molecule: nodeType
-        concentration: 0
   - type: Point
     parameters: [100,0]
-    programs: ## the reactions installed in each nodes
-      - *channel1
-      - *channel2
-    contents:
-      - molecule: source
-        concentration: *source
-      - molecule: destination
-        concentration: *destination
-      - molecule: g
-        concentration: Double.PositiveInfinity
-      - molecule: nodeType
-        concentration: 0
-  - type: Point
+  - type: Point # CLOUD
     parameters: [50,200]
-    programs: ## the reactions installed in each nodes
-      - *program
+    programs: []
     contents:
-      - molecule: source
-        concentration: *source
-      - molecule: destination
-        concentration: *destination
-      - molecule: g
-        concentration: Double.PositiveInfinity
       - molecule: nodeType
-        concentration: 0
+        concentration: 1
 
 export:
   - type: CSVExporter
