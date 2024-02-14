@@ -30,8 +30,10 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
     reaction: Reaction[Any],
     randomGenerator: RandomGenerator,
     programName: String,
-    retentionTime: Double
-) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime) {
+    retentionTime: Double,
+    surrogateOf: ID,
+    downstreams: List[String] = List.empty
+) extends RunScafiProgram[Any, P](environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf, downstreams) {
 
   def this(
       environment: Environment[Any, P],
@@ -46,7 +48,9 @@ sealed class DefaultRunScafiProgram[P <: Position[P]](
       reaction,
       randomGenerator,
       programName,
-      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate)
+      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate),
+      node.getId(),
+      List.empty
     )
   }
 }
@@ -57,7 +61,9 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     reaction: Reaction[T],
     randomGenerator: RandomGenerator,
     programName: String,
-    retentionTime: Double
+    retentionTime: Double,
+    surrogateOf: ID,
+    downstreams: List[String] = List.empty
 ) extends AbstractLocalAction[T](node) {
 
   def this(
@@ -73,7 +79,9 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       reaction,
       randomGenerator,
       programName,
-      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate)
+      FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate),
+      node.getId(),
+      List.empty
     )
   }
 
@@ -81,16 +89,19 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   val program =
     ResourceLoader.classForName(programName).getDeclaredConstructor().newInstance().asInstanceOf[CONTEXT => EXPORT]
   val programNameMolecule = new SimpleMolecule(programName)
-  lazy val nodeManager = new SimpleNodeManager(node)
+  val referenceNode = if(node.getId() == surrogateOf) node else environment.getNodeByID(surrogateOf)
+  lazy val nodeManager = new SimpleNodeManager(referenceNode)
   private var neighborhoodManager: Map[ID, NeighborData[P]] = Map()
   private val commonNames = new ScafiIncarnationForAlchemist.StandardSensorNames {}
   private var completed = false
   declareDependencyTo(Dependency.EVERY_MOLECULE)
 
+  val dependencyGraph = nodeManager.getOrElse[Map[String,List[String]]]("dependencyGraph", Map.empty)
+
   def asMolecule = programNameMolecule
 
   override def cloneAction(node: Node[T], reaction: Reaction[T]) =
-    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime)
+    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf, downstreams)
 
   override def execute(): Unit = {
     import scala.jdk.CollectionConverters._

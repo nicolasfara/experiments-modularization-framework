@@ -23,6 +23,7 @@ _constants:
   exportInterval: &exportInterval 1.0
   totalNodes: &totalNodes 1497
   timeToAlign: &timeToAlign 1365922800
+  dependencyGraph: &dependencyGraph "scala.collection.Map(\"it.unibo.sim.Channel1\" -> List(\"it.unibo.sim.Channel2\"))"
 
 seeds:
   scenario: *random
@@ -54,17 +55,32 @@ _reactions:
           - type: RunScafiProgram
             parameters: [it.unibo.sim.Channel2, *retentionTime]
       - program: send
-
+  - program: &dev4channel2
+      - time-distribution: *programRate2
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.sim.Channel2, *retentionTime, 4]
+      - program: send
+  - program: &dev0channel1
+      - time-distribution: *programRate2
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.sim.Channel1, *retentionTime, 0, [it.unibo.sim.Channel2]]
+      - program: send
 
 deployments: ## i.e, how to place nodes
   parameters:
     - type: Point
       parameters: [0,0]
       programs:
-        - *channel1
+        #- *channel1
         - *channel2
       contents: 
         shared: &shared
+          - molecule: dependencyGraph
+            concentration: *dependencyGraph
           - molecule: source
             concentration: *source
           - molecule: destination
@@ -97,7 +113,7 @@ deployments: ## i.e, how to place nodes
       parameters: [50,50]
       programs:
         - *channel1
-        - *channel2
+        #- *channel2
       contents: *shared
     - type: Point
       parameters: [100,50]
@@ -107,7 +123,9 @@ deployments: ## i.e, how to place nodes
       contents: *shared
     - type: Point # CLOUD
       parameters: [50,200]
-      programs: []
+      programs:
+        - *dev0channel1
+        - *dev4channel2
       contents:
         shared: *shared
         just-here:
