@@ -15,7 +15,7 @@ variables:
 
 _constants:
   source: &source 0
-  destination: &destination 2
+  destination: &destination 5 
   width: &width 20.0
   retentionTime: &retentionTime 5.0
   programRate1: &programRate1 1.0
@@ -92,7 +92,7 @@ deployments: ## i.e, how to place nodes
         - *channel2
       contents: *shared
     - type: Point
-      parameters: [0,50]
+      parameters: [-20,50]
       programs:
         - *channel1
         - *channel2
