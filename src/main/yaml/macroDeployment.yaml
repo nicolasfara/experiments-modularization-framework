@@ -113,10 +113,10 @@ deployments: ## i.e, how to place nodes
       parameters: [50,200]
       programs: []
       contents:
-          shared: *shared
-          just-here:
-            - molecule: nodeType
-              concentration: 1 #cloud
+        shared: *shared
+        just-here:
+          - molecule: nodeType
+            concentration: 1 #cloud
 
 export:
   - type: CSVExporter
