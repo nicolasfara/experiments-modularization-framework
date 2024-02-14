@@ -109,6 +109,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, surrogateOf)
 
   var forwardTo: Option[Node[T]] = None
+  var export: Option[EXPORT] = None
 
   override def execute(): Unit = {
     if(referenceNode != node) {
@@ -133,6 +134,19 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       forwardTo = Some(referenceNode)
     }
 
+    val context = getContextForLocalNode()
+    val computed = program(context)
+    export = Some(computed)
+    node.setConcentration(programName, computed.root[T]())
+    // val toSend = NeighborData(computed, position, alchemistCurrentTime)
+    //neighborhoodManager = neighborhoodManager + (node.getId -> toSend)
+    completed = true
+  }
+
+  def getContextForLocalNode(): CONTEXT = {
+    val neighborhoodSensors = scala.collection.mutable.Map[CNAME, Map[ID, Any]]()
+    val exports: Iterable[(ID, EXPORT)] = neighborhoodManager.view.mapValues(_.exportData)
+
     import scala.jdk.CollectionConverters._
     implicit def euclideanToPoint(point: P): Point3D = point.getDimensions match {
       case 1 => Point3D(point.getCoordinate(0), 0, 0)
@@ -142,12 +156,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     val position: P = environment.getPosition(node)
     // NB: We assume it.unibo.alchemist.model.Time = DoubleTime
     //     and that its "time unit" is seconds, and then we get NANOSECONDS
-    val alchemistCurrentTime = Try(environment.getSimulation)
-      .map(_.getTime)
-      .orElse(
-        Failure(new IllegalStateException("The simulation is uninitialized (did you serialize the environment?)"))
-      )
-      .get
+    val alchemistCurrentTime = RunScafiProgram.getAlchemistCurrentTime(environment)
     def alchemistTimeToNanos(time: AlchemistTime): Long = (time.toDouble * 1_000_000_000).toLong
     val currentTime: Long = alchemistTimeToNanos(alchemistCurrentTime)
     if (!neighborhoodManager.contains(node.getId)) {
@@ -160,9 +169,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       currentTime - neighborhoodManager.get(node.getId).map(d => alchemistTimeToNanos(d.executionTime)).getOrElse(0L)
     val localSensors = node.getContents().asScala.map { case (k, v) => k.getName -> v }
 
-    val neighborhoodSensors = scala.collection.mutable.Map[CNAME, Map[ID, Any]]()
-    val exports: Iterable[(ID, EXPORT)] = neighborhoodManager.view.mapValues(_.exportData)
-    val context = new ContextImpl(node.getId, exports, localSensors, Map.empty) {
+    new ContextImpl(node.getId, exports, localSensors, Map.empty) {
       override def nbrSense[T](nsns: CNAME)(nbr: ID): Option[T] =
         neighborhoodSensors
           .getOrElseUpdate(
@@ -224,11 +231,6 @@ sealed class RunScafiProgram[T, P <: Position[P]](
         case _ => localSensors.get(lsns)
       }).map(_.asInstanceOf[T])
     }
-    val computed = program(context)
-    node.setConcentration(programName, computed.root[T]())
-    val toSend = NeighborData(computed, position, alchemistCurrentTime)
-    neighborhoodManager = neighborhoodManager + (node.getId -> toSend)
-    completed = true
   }
 
   def sendExport(id: ID, exportData: NeighborData[P]): Unit = neighborhoodManager += id -> exportData
@@ -247,4 +249,11 @@ object RunScafiProgram {
   implicit class RichMap[K, V](map: Map[K, V]) {
     def mapValuesStrict[T](f: V => T): Map[K, T] = map.map(tp => tp._1 -> f(tp._2))
   }
+
+  def getAlchemistCurrentTime[T,P <: Position[P]](environment: Environment[T,P]): AlchemistTime = Try(environment.getSimulation)
+    .map(_.getTime)
+    .orElse(
+      Failure(new IllegalStateException("The simulation is uninitialized (did you serialize the environment?)"))
+    )
+    .get
 }

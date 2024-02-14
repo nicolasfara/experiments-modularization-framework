@@ -14,6 +14,7 @@ import it.unibo.alchemist.model.ScafiIncarnationUtils._
 import it.unibo.alchemist.model.implementations.nodes.ScafiDevice
 import it.unibo.alchemist.model._
 import it.unibo.alchemist.model.actions.AbstractAction
+import it.unibo.alchemist.model.implementations.actions.RunScafiProgram.NeighborData
 import it.unibo.alchemist.model.molecules.SimpleMolecule
 
 import java.util.stream.Collectors
@@ -62,14 +63,17 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
-    val toSend = program.getExport(device.getNode.getId).get
-    program.forwardTo.foreach(node => node.setConcentration(program.programNameMolecule, toSend.exportData.root()))
-    for {
-      neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
-      action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
-      if action.programNameMolecule == program.programNameMolecule
-    } action.sendExport(device.getNode.getId, toSend)
-    program.prepareForComputationalCycle
+    program.export.foreach { exportToSend => //.getExport(device.getNode.getId).get
+      program.forwardTo.foreach(node => node.setConcentration(program.programNameMolecule, exportToSend.root()))
+      for {
+        neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
+        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+        if action.programNameMolecule == program.programNameMolecule
+      } action.sendExport(device.getNode.getId,
+        NeighborData(exportToSend, environment.getPosition(device.getNode), RunScafiProgram.getAlchemistCurrentTime(environment))
+      )
+      program.prepareForComputationalCycle
+    }
   }
 
   /** @return The context for this action. */

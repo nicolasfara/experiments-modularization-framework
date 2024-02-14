@@ -14,6 +14,7 @@ class Channel1 extends MyAggregateProgram {
     val isDestination = destinationId == mid()
     node.put("isSource", isSource)
     node.put("isDestination", isDestination)
+    node.put("nbrs", foldhood(Set.empty[Int])(_ ++ _)(Set(nbr{mid()})))
     val distanceToSource = distanceTo(isSource)
     val distanceToDestination = distanceTo(isDestination)
     node.put("distanceToSource", distanceToSource)
