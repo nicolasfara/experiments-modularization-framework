@@ -61,7 +61,7 @@ _reactions:
         actions:
           - type: RunScafiProgram
             parameters: [ it.unibo.sim.Channel2, *retentionTime, -1, 6]
-      - program: send
+      #- program: send
   - program: &dev4channel2
       - time-distribution: *programRate2
         type: Event

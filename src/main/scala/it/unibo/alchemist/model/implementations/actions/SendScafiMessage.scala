@@ -63,15 +63,16 @@ class SendScafiMessage[T, P <: Position[P]](
   /** Effectively executes this action. */
   override def execute(): Unit = {
     program.surrogateExport match {
-      case Some((id, export)) =>
-        val node = environment.getNodeByID(id)
+      case Some((originalNodeId, export)) =>
+        val originalNode = environment.getNodeByID(originalNodeId)
         for {
-          neighborhood <- environment.getNeighborhood(node).getNeighbors.iterator().asScala.filter(_.getId != device.getNode.getId)
-          action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
-          if action.programNameMolecule == program.programNameMolecule
+          neighborhood <- environment.getNeighborhood(originalNode).getNeighbors.iterator().asScala.filter(_.getId != device.getNode.getId)
+          nbrOfOriginalNode <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+          if nbrOfOriginalNode.programNameMolecule == program.programNameMolecule
         } {
           neighborhood.setConcentration(program.programNameMolecule, export.root[T]())
-          action.receiveExport(id, NeighborData(export, environment.getPosition(node), RunScafiProgram.getAlchemistCurrentTime(environment)))
+          nbrOfOriginalNode.receiveExport(originalNodeId,
+            NeighborData(export, environment.getPosition(originalNode), RunScafiProgram.getAlchemistCurrentTime(environment)))
         }
         program.prepareForComputationalCycle
       case None if program.forwardNode == -1 =>
