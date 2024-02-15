@@ -120,13 +120,13 @@ deployments: ## i.e, how to place nodes
       parameters: [50,50]
       programs:
         - *channel1
-        - *channel2
+        - *channel2proxy
       contents: *shared
     - type: Point
       parameters: [100,50]
       programs:
         - *channel1
-        - *channel2proxy
+        - *channel2
       contents: *shared
     - type: Point # CLOUD
       parameters: [50,200]

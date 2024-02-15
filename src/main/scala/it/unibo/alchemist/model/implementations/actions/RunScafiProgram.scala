@@ -137,11 +137,11 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       val computedResult = computedExport.root[T]()
 
       // Write the result to dependent modules
-      nodesRequiringResult.foreach { node => node.setConcentration(programName, computedResult) }
+      if (isSurrogate) referenceNode.setConcentration(programName, computedResult)
 
       if (isSurrogate) {
         // Set the computed export
-        surrogateExport = Some(surrogateOfDevice, computedExport)
+        surrogateExport = Some(referenceNode.getId, computedExport)
       } else {
         // If I am not supporting a program, I have to compute the export
         val toSend = NeighborData(computedExport, environment.getPosition(node), getAlchemistCurrentTime(environment))

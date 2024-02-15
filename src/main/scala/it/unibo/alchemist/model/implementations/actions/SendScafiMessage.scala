@@ -66,10 +66,11 @@ class SendScafiMessage[T, P <: Position[P]](
       case Some((id, export)) =>
         val node = environment.getNodeByID(id)
         for {
-          neighborhood <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
+          neighborhood <- environment.getNeighborhood(node).getNeighbors.iterator().asScala.filter(_.getId != device.getNode.getId)
           action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
           if action.programNameMolecule == program.programNameMolecule
         } {
+          neighborhood.setConcentration(program.programNameMolecule, export.root[T]())
           action.sendExport(id, NeighborData(export, environment.getPosition(node), RunScafiProgram.getAlchemistCurrentTime(environment)))
         }
         program.prepareForComputationalCycle
