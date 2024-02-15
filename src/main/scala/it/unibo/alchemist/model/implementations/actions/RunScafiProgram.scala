@@ -289,7 +289,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     }
   }
 
-  def sendExport(id: ID, exportData: NeighborData[P]): Unit = {
+  def receiveExport(id: ID, exportData: NeighborData[P]): Unit = {
     println(s"Node ${node.getId} is sending export to $id concerning $programName")
     neighborhoodManager += id -> exportData
   }

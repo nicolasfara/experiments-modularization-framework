@@ -71,7 +71,7 @@ class SendScafiMessage[T, P <: Position[P]](
           if action.programNameMolecule == program.programNameMolecule
         } {
           neighborhood.setConcentration(program.programNameMolecule, export.root[T]())
-          action.sendExport(id, NeighborData(export, environment.getPosition(node), RunScafiProgram.getAlchemistCurrentTime(environment)))
+          action.receiveExport(id, NeighborData(export, environment.getPosition(node), RunScafiProgram.getAlchemistCurrentTime(environment)))
         }
         program.prepareForComputationalCycle
       case None if program.forwardNode == -1 =>
@@ -80,7 +80,7 @@ class SendScafiMessage[T, P <: Position[P]](
           neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
           action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
           if action.programNameMolecule == program.programNameMolecule
-        } action.sendExport(device.getNode.getId, toSend)
+        } action.receiveExport(device.getNode.getId, toSend)
         program.prepareForComputationalCycle
       case None => program.prepareForComputationalCycle
     }
