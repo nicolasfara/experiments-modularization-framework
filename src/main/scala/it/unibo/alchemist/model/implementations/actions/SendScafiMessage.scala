@@ -15,7 +15,6 @@ import it.unibo.alchemist.model.implementations.nodes.ScafiDevice
 import it.unibo.alchemist.model._
 import it.unibo.alchemist.model.actions.AbstractAction
 import it.unibo.alchemist.model.implementations.actions.RunScafiProgram.NeighborData
-import it.unibo.alchemist.model.molecules.SimpleMolecule
 
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters._
@@ -63,17 +62,39 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
-    program.export.foreach { exportToSend => //.getExport(device.getNode.getId).get
-      program.forwardTo.foreach(node => node.setConcentration(program.programNameMolecule, exportToSend.root()))
-      for {
-        neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
-        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
-        if action.programNameMolecule == program.programNameMolecule
-      } action.sendExport(device.getNode.getId,
-        NeighborData(exportToSend, environment.getPosition(device.getNode), RunScafiProgram.getAlchemistCurrentTime(environment))
-      )
-      program.prepareForComputationalCycle
+    program.surrogateExport match {
+      case Some((id, export)) =>
+        val node = environment.getNodeByID(id)
+        for {
+          neighborhood <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
+          action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+          if action.programNameMolecule == program.programNameMolecule
+        } {
+          action.sendExport(id, NeighborData(export, environment.getPosition(node), RunScafiProgram.getAlchemistCurrentTime(environment)))
+        }
+        program.prepareForComputationalCycle
+      case None if program.forwardNode == -1 =>
+        val toSend = program.getExport(device.getNode.getId).get
+        for {
+          neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
+          action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+          if action.programNameMolecule == program.programNameMolecule
+        } action.sendExport(device.getNode.getId, toSend)
+        program.prepareForComputationalCycle
+      case None => program.prepareForComputationalCycle
     }
+//
+//    program.export.foreach { case (id, exportToSend) => //.getExport(device.getNode.getId).get
+//      program.forwardTo.foreach(node => node.setConcentration(program.programNameMolecule, exportToSend.root[T]()))
+//      for {
+//        neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
+//        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+//        if action.programNameMolecule == program.programNameMolecule
+//      } action.sendExport(device.getNode.getId,
+//        NeighborData(exportToSend, environment.getPosition(device.getNode), RunScafiProgram.getAlchemistCurrentTime(environment))
+//      )
+//      program.prepareForComputationalCycle
+//    }
   }
 
   /** @return The context for this action. */

@@ -46,21 +46,28 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.sim.Channel1, *retentionTime, -1]
+            parameters: [it.unibo.sim.Channel1, *retentionTime, -1, -1]
       - program: send
   - program: &channel2
       - time-distribution: *programRate2
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.sim.Channel2, *retentionTime, -1]
+            parameters: [it.unibo.sim.Channel2, *retentionTime, -1, -1]
+      - program: send
+  - program: &channel2proxy
+      - time-distribution: *programRate2
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [ it.unibo.sim.Channel2, *retentionTime, -1, 6]
       - program: send
   - program: &dev4channel2
       - time-distribution: *programRate2
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.sim.Channel2, *retentionTime, 4]
+            parameters: [it.unibo.sim.Channel2, *retentionTime, 4, -1]
       - program: send
   - program: &dev0channel1
       - time-distribution: *programRate2
@@ -113,13 +120,13 @@ deployments: ## i.e, how to place nodes
       parameters: [50,50]
       programs:
         - *channel1
-        #- *channel2
+        - *channel2
       contents: *shared
     - type: Point
       parameters: [100,50]
       programs:
         - *channel1
-        - *channel2
+        - *channel2proxy
       contents: *shared
     - type: Point # CLOUD
       parameters: [50,200]
