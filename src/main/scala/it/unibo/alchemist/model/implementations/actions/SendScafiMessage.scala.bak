@@ -14,17 +14,17 @@ import it.unibo.alchemist.model.ScafiIncarnationUtils._
 import it.unibo.alchemist.model.implementations.nodes.ScafiDevice
 import it.unibo.alchemist.model._
 import it.unibo.alchemist.model.actions.AbstractAction
+import it.unibo.alchemist.model.implementations.actions.RunScafiProgram.NeighborData
 
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters._
 
 class SendScafiMessage[T, P <: Position[P]](
-  environment: Environment[T, P],
-  device: ScafiDevice[T],
-  reaction: Reaction[T],
-  val program: RunScafiProgram[T, P]
+    environment: Environment[T, P],
+    device: ScafiDevice[T],
+    reaction: Reaction[T],
+    val program: RunScafiProgram[T, P]
 ) extends AbstractAction[T](device.getNode) {
-
   assert(reaction != null, "Reaction cannot be null")
   assert(program != null, "Program cannot be null")
 
@@ -62,25 +62,41 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
-    if (program.isSurrogate) {
-      println(s"Surrogate program detected ran by ${device.getNode().getId}, skipping")
-      program.prepareForComputationalCycle
-      return
+    program.surrogateExport match {
+      case Some((originalNodeId, export)) =>
+        val originalNode = environment.getNodeByID(originalNodeId)
+        for {
+          neighborhood <- environment.getNeighborhood(originalNode).getNeighbors.iterator().asScala.filter(_.getId != device.getNode.getId)
+          nbrOfOriginalNode <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+          if nbrOfOriginalNode.programNameMolecule == program.programNameMolecule
+        } {
+          neighborhood.setConcentration(program.programNameMolecule, export.root[T]())
+          nbrOfOriginalNode.receiveExport(originalNodeId,
+            NeighborData(export, environment.getPosition(originalNode), RunScafiProgram.getAlchemistCurrentTime(environment)))
+        }
+        program.prepareForComputationalCycle
+      case None if program.forwardNode == -1 =>
+        val toSend = program.getExport(device.getNode.getId).get
+        for {
+          neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
+          action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+          if action.programNameMolecule == program.programNameMolecule
+        } action.receiveExport(device.getNode.getId, toSend)
+        program.prepareForComputationalCycle
+      case None => program.prepareForComputationalCycle
     }
-
-    if (program.isComponentOffloaded && program.surrogateToSend.isEmpty) {
-      println(s"Offloaded program detected required by ${device.getNode.getId}")
-      program.prepareForComputationalCycle
-      return
-    }
-
-    val toSend = if (program.isComponentOffloaded) program.surrogateToSend.get else program.getExport(device.getNode.getId).get
-    for {
-      neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
-      action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
-      if action.programNameMolecule == program.programNameMolecule
-    } action.sendExport(device.getNode.getId, toSend)
-    program.prepareForComputationalCycle
+//
+//    program.export.foreach { case (id, exportToSend) => //.getExport(device.getNode.getId).get
+//      program.forwardTo.foreach(node => node.setConcentration(program.programNameMolecule, exportToSend.root[T]()))
+//      for {
+//        neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
+//        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+//        if action.programNameMolecule == program.programNameMolecule
+//      } action.sendExport(device.getNode.getId,
+//        NeighborData(exportToSend, environment.getPosition(device.getNode), RunScafiProgram.getAlchemistCurrentTime(environment))
+//      )
+//      program.prepareForComputationalCycle
+//    }
   }
 
   /** @return The context for this action. */
