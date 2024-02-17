@@ -14,6 +14,8 @@ class SetupNode[T, P <: Position[P]](
   private val destinationNode = new SimpleMolecule("destination")
   private val isDestination = new SimpleMolecule("isDestination")
   private val isCloud = new SimpleMolecule("isCloud")
+  private val isOffloading = new SimpleMolecule("isOffloading")
+  private val offloadingMapping = new SimpleMolecule("offloadingMapping")
 
   override def initializationComplete(time: Time, environment: Environment[T, _]): Unit =
     getTimeDistribution.update(Time.INFINITY, true, 0.0, environment)
@@ -26,5 +28,9 @@ class SetupNode[T, P <: Position[P]](
       .filter(node => node.getConcentration(destinationNode) == node.getId)
       .forEach(_.setConcentration(isDestination, true.asInstanceOf[T]))
     environment.getNodeByID(cloudId).setConcentration(isCloud, true.asInstanceOf[T])
+    val mapping = environment.getNodes.stream().findFirst().get().getConcentration(offloadingMapping).asInstanceOf[Map[(String, Int), Int]]
+    val nodesRequestOffloading = mapping.map { case ((_, nodeId), _) => nodeId }.toSet
+    nodesRequestOffloading
+      .foreach(nodeId => environment.getNodeByID(nodeId).setConcentration(isOffloading, true.asInstanceOf[T]))
   }
 }
