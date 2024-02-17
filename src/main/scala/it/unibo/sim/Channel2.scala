@@ -13,7 +13,7 @@ class Channel2 extends MyAggregateProgram {
     val localDistanceValue = node.getOrElse[Double]("it.unibo.sim.Channel1", Double.PositiveInfinity)
     val distanceBetweenSourceAndDestination = distanceBetween(source, destination)
     node.put("distanceBetween", distanceBetweenSourceAndDestination)
-//    node.put("nbrs-2", foldhood(Set.empty[Int])(_ ++ _)(Set(nbr{mid()})))
+
     val result = localDistanceValue <= distanceBetweenSourceAndDestination + width
     node.put("inChannel", result)
     result

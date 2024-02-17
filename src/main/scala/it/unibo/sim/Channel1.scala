@@ -17,7 +17,6 @@ class Channel1 extends MyAggregateProgram {
     node.put("distanceToSource", distanceToSource)
     node.put("distanceToDestination", distanceToDestination)
 
-    val result = distanceToSource + distanceToDestination
-    result
+    distanceToSource + distanceToDestination
   }
 }
