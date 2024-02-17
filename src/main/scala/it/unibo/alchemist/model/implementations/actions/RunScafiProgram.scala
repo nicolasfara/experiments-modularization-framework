@@ -108,7 +108,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     val neighborhoodSensors = scala.collection.mutable.Map[CNAME, Map[ID, Any]]()
     val exports: Iterable[(ID, EXPORT)] = neighborhoodManager.view.mapValues(_.exportData)
     val context = new ContextImpl(node.getId, exports, localSensors, Map.empty) {
-      override def nbrSense[T](nsns: CNAME)(nbr: ID): Option[T] =
+      override def nbrSense[TT](nsns: CNAME)(nbr: ID): Option[TT] =
         neighborhoodSensors
           .getOrElseUpdate(
             nsns,
@@ -140,9 +140,9 @@ sealed class RunScafiProgram[T, P <: Position[P]](
             }
           )
           .get(nbr)
-          .map(_.asInstanceOf[T])
+          .map(_.asInstanceOf[TT])
 
-      override def sense[T](lsns: String): Option[T] = (lsns match {
+      override def sense[TT](lsns: String): Option[TT] = (lsns match {
         case LSNS_ALCHEMIST_COORDINATES => Some(position.getCoordinates)
         case commonNames.LSNS_DELTA_TIME => Some(FiniteDuration(deltaTime, TimeUnit.NANOSECONDS))
         case commonNames.LSNS_POSITION =>
@@ -167,7 +167,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
         case LSNS_ALCHEMIST_RANDOM => Some(randomGenerator)
         case LSNS_ALCHEMIST_TIMESTAMP => Some(alchemistCurrentTime)
         case _ => localSensors.get(lsns)
-      }).map(_.asInstanceOf[T])
+      }).map(_.asInstanceOf[TT])
     }
 
     if (!shouldExecuteThisProgram) {
@@ -186,6 +186,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     if (isSurrogate) {
       // Surrogate node must execute the program for all the nodes that have forwarded the program to it
       surrogateForNodes.foreach(deviceId => {
+        // If the context for the node is available, execute the program, otherwise skip to the next cycle
         contextsMap.get(deviceId).foreach(contextForNode => {
           val computedResult = program(contextForNode)
           val originalNodePosition = environment.getPosition(environment.getNodeByID(deviceId))
