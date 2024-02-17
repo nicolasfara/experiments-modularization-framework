@@ -15,16 +15,6 @@ plugins {
 repositories {
     mavenCentral()
 }
-/*
- * Only required if you plan to use Protelis, remove otherwise
- */
-sourceSets {
-    main {
-        resources {
-            srcDir("src/main/protelis")
-        }
-    }
-}
 
 val usesJvm: Int = File(File(projectDir, "docker/sim"), "Dockerfile")
     .readLines()
@@ -40,7 +30,7 @@ multiJvm {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
+//    implementation(kotlin("stdlib-jdk8"))
     implementation(libs.bundles.alchemist)
     implementation(libs.bundles.scalacache)
     if (!GraphicsEnvironment.isHeadless()) {

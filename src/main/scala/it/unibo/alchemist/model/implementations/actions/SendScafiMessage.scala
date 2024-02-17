@@ -24,7 +24,6 @@ class SendScafiMessage[T, P <: Position[P]](
   reaction: Reaction[T],
   val program: RunScafiProgram[T, P]
 ) extends AbstractAction[T](device.getNode) {
-
   assert(reaction != null, "Reaction cannot be null")
   assert(program != null, "Program cannot be null")
 
@@ -63,18 +62,38 @@ class SendScafiMessage[T, P <: Position[P]](
   /** Effectively executes this action. */
   override def execute(): Unit = {
     if (program.isSurrogate) {
-      println(s"Surrogate program detected ran by ${device.getNode().getId}, skipping")
+      println("Surrogate " + device.getNode.getId + " is not allowed to send messages")
+      program.prepareForComputationalCycle
+      return
+    }
+    if (!program.shouldExecuteThisProgram) {
+      println(s"Node ${device.getNode.getId} has offloaded $program to a surrogate")
+      // Get program from surrogate
+      val surrogateId = program.offloadingMapping.filter { case ((programName, source), _) =>
+        source == device.getNode.getId && programName == program.programNameMolecule.getName
+      }.values.head
+
+      val surrogateNode = environment.getNodeByID(surrogateId)
+      for {
+        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](surrogateNode).filter(program.getClass.isInstance(_))
+        if action.programNameMolecule == program.programNameMolecule
+      } {
+        action.surrogateComputedResult.get(device.getNode.getId).foreach(toSend => {
+          device.getNode().setConcentration(program.programNameMolecule, toSend.exportData.root[T]())
+          for {
+            neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
+            action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+            if action.programNameMolecule == program.programNameMolecule
+          } action.sendExport(device.getNode.getId, toSend)
+        })
+      }
+
       program.prepareForComputationalCycle
       return
     }
 
-    if (program.isComponentOffloaded && program.surrogateToSend.isEmpty) {
-      println(s"Offloaded program detected required by ${device.getNode.getId}")
-      program.prepareForComputationalCycle
-      return
-    }
-
-    val toSend = if (program.isComponentOffloaded) program.surrogateToSend.get else program.getExport(device.getNode.getId).get
+    // ----------------- ORIGINAL CODE -----------------
+    val toSend = program.getExport(device.getNode.getId).get
     for {
       neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
       action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))

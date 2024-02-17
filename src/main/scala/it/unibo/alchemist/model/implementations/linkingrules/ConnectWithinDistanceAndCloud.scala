@@ -7,23 +7,28 @@ import it.unibo.alchemist.model.neighborhoods.Neighborhoods
 
 import java.util.stream.Collectors
 
-class ConnectWithinDistanceAndCloud[T, P <: Position[P]](radius: Double)
-  extends ConnectWithinDistance[T, P](radius) {
-  val deviceTypeMoleculeName = "nodeType"
-  val centralNode = 1
+class ConnectWithinDistanceAndCloud[T, P <: Position[P]](radius: Double, cloudId: Int) extends ConnectWithinDistance[T, P](radius) {
+//  val deviceTypeMoleculeName = "nodeType"
+//  val centralNode = 1
 
   override def computeNeighborhood(center: Node[T], env: Environment[T, P]): Neighborhood[T] = {
     val nbrs = env.getNodesWithinRange(center, getRange)
-    Neighborhoods.make(env, center,
-      if (center.getConcentration(new SimpleMolecule(deviceTypeMoleculeName)) != centralNode) { // normal
-        nbrs.addAll(env.getNodes.stream().filter(n => n.getConcentration(new SimpleMolecule(deviceTypeMoleculeName)) == centralNode)
-          .collect(Collectors.toList[Node[T]]))
-        nbrs
-      } else if (center.getConcentration(new SimpleMolecule(deviceTypeMoleculeName)) == centralNode) { // candidate manager
-        nbrs.addAll(env.getNodes.stream()
-          .collect(Collectors.toList[Node[T]]))
-        nbrs
-      } else nbrs
-    )
+    env.getNodes.stream().filter(n => n.getId == cloudId).findFirst().ifPresent(n => nbrs.add(n))
+    if (center.getId == cloudId) {
+      nbrs.addAll(env.getNodes)
+    }
+    Neighborhoods.make(env, center, nbrs)
+
+//    Neighborhoods.make(env, center,
+//      if (center.getConcentration(new SimpleMolecule(deviceTypeMoleculeName)) != centralNode) { // normal
+//        nbrs.addAll(env.getNodes.stream().filter(n => n.getConcentration(new SimpleMolecule(deviceTypeMoleculeName)) == centralNode)
+//          .collect(Collectors.toList[Node[T]]))
+//        nbrs
+//      } else if (center.getConcentration(new SimpleMolecule(deviceTypeMoleculeName)) == centralNode) { // candidate manager
+//        nbrs.addAll(env.getNodes.stream()
+//          .collect(Collectors.toList[Node[T]]))
+//        nbrs
+//      } else nbrs
+//    )
   }
 }

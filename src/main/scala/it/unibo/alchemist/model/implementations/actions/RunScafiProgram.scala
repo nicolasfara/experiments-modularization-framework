@@ -30,9 +30,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   reaction: Reaction[T],
   randomGenerator: RandomGenerator,
   programName: String,
-  retentionTime: Double,
-  forwardExecutionTo: ID,
-  backReferenceTo: ID,
+  retentionTime: Double
 ) extends AbstractLocalAction[T](node) {
 
   def this(
@@ -41,20 +39,11 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     reaction: Reaction[T],
     randomGenerator: RandomGenerator,
     programName: String
-  ) = this(environment, node, reaction, randomGenerator, programName, FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate), node.getId, node.getId)
-
-  def this(
-    environment: Environment[T, P],
-    node: Node[T],
-    reaction: Reaction[T],
-    randomGenerator: RandomGenerator,
-    programName: String,
-    retentionTime: Double,
-  ) = this(environment, node, reaction, randomGenerator, programName, retentionTime, node.getId, node.getId)
+  ) = this(environment, node, reaction, randomGenerator, programName, FastMath.nextUp(1.0 / reaction.getTimeDistribution.getRate))
 
   import RunScafiProgram.NeighborData
-  val program = ResourceLoader.classForName(programName)
-      .getDeclaredConstructor().newInstance().asInstanceOf[CONTEXT => EXPORT]
+  val program =
+    ResourceLoader.classForName(programName).getDeclaredConstructor().newInstance().asInstanceOf[CONTEXT => EXPORT]
   val programNameMolecule = new SimpleMolecule(programName)
   lazy val nodeManager = new SimpleNodeManager(node)
   private var neighborhoodManager: Map[ID, NeighborData[P]] = Map()
@@ -64,14 +53,26 @@ sealed class RunScafiProgram[T, P <: Position[P]](
 
   def asMolecule = programNameMolecule
 
-  val isComponentOffloaded = backReferenceTo == -1
-  val isSurrogate = forwardExecutionTo == -1
+  val offloadingMapping = node.getConcentration(new SimpleMolecule("offloadingMapping"))
+    .asInstanceOf[Map[(String, Int), Int]]
+  val isSurrogate = offloadingMapping.values.exists(_ == node.getId)
+  val shouldExecuteThisProgram = !offloadingMapping
+    .exists { case ((program, source), _) => source == node.getId && program == programName }
+  var clonedContext: Option[CONTEXT] = None
+  var surrogateComputedResult: Map[ID, NeighborData[P]] = Map()
+  val surrogateId = offloadingMapping
+    .filter { case ((program, source), _) => source == node.getId && program == programName }
+    .map { case (_, surrogate) => surrogate}
+    .collectFirst { case id => id }
 
-  var remoteContext: Option[CONTEXT] = None
-  var surrogateToSend: Option[NeighborData[P]] = None
+  val onBehalfOf = offloadingMapping
+    .filter { case ((_, _), destination) => destination == node.getId }
+    .keys
+    .map { case (_, source) => source}
+    .toSet
 
   override def cloneAction(node: Node[T], reaction: Reaction[T]) =
-    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime, forwardExecutionTo, backReferenceTo)
+    new RunScafiProgram(environment, node, reaction, randomGenerator, programName, retentionTime)
 
   override def execute(): Unit = {
     import scala.jdk.CollectionConverters._
@@ -166,28 +167,34 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       }).map(_.asInstanceOf[T])
     }
 
-    if (isComponentOffloaded) {
-      // Do nothing
-      val forwardNode = environment.getNodeByID(forwardExecutionTo)
+    if (!shouldExecuteThisProgram) {
+      println(s"Node ${node.getId} has forwarded its computation to another node")
       for {
-        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](forwardNode).filter(this.getClass.isInstance(_))
+        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](environment.getNodeByID(surrogateId.get)).filter(this.getClass.isInstance(_))
         if action.programNameMolecule == programNameMolecule
-      } {
-        action.remoteContext = Some(context)
-      }
-    } else if (isSurrogate) {
-      remoteContext.foreach(ctx => {
-        val computed = program(ctx)
-        surrogateToSend = Some(NeighborData(computed, position, alchemistCurrentTime))
-        val backNode = environment.getNodeByID(backReferenceTo)
-        backNode.setConcentration(programName, computed.root[T]())
-      })
-    } else {
-      val computed = program(context)
-      node.setConcentration(programName, computed.root[T]())
-      val toSend = NeighborData(computed, position, alchemistCurrentTime)
-      neighborhoodManager = neighborhoodManager + (node.getId -> toSend)
+      } action.clonedContext = Some(context)
+      completed = true
+      return
     }
+
+    if (isSurrogate) {
+      println(s"Surrogate ${node.getId} computes $programName")
+      onBehalfOf.foreach(deviceId => {
+        clonedContext.foreach(ctx => {
+          println("Surrogate context is not null, using it")
+          val surrogateResult = program(ctx)
+          val toSend = NeighborData(surrogateResult, position, alchemistCurrentTime)
+          surrogateComputedResult = surrogateComputedResult + (deviceId -> toSend)
+        })
+      })
+      completed = true
+      return
+    }
+
+    val computed = program(context)
+    node.setConcentration(programName, computed.root[T]())
+    val toSend = NeighborData(computed, position, alchemistCurrentTime)
+    neighborhoodManager = neighborhoodManager + (node.getId -> toSend)
     completed = true
   }
 
