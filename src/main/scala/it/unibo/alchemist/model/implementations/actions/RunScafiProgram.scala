@@ -58,14 +58,17 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   val isSurrogate = offloadingMapping.values.exists(_ == node.getId)
   val shouldExecuteThisProgram = !offloadingMapping
     .exists { case ((program, source), _) => source == node.getId && program == programName }
-  var clonedContext: Option[CONTEXT] = None
-  var surrogateComputedResult: Map[ID, NeighborData[P]] = Map()
-  val surrogateId = offloadingMapping
+
+  private var contextsMap: Map[ID, CONTEXT] = Map()
+  private var surrogateComputedResult: Map[ID, NeighborData[P]] = Map()
+  // This optional is fulfilled with the surrogate node id where the program has been forwarded, otherwise it is empty
+  private val surrogateId = offloadingMapping
     .filter { case ((program, source), _) => source == node.getId && program == programName }
     .map { case (_, surrogate) => surrogate}
     .collectFirst { case id => id }
 
-  val onBehalfOf = offloadingMapping
+  // This set contains the nodes that have forwarded the program to this node
+  private val surrogateForNodes = offloadingMapping
     .filter { case ((_, _), destination) => destination == node.getId }
     .keys
     .map { case (_, source) => source}
@@ -168,22 +171,25 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     }
 
     if (!shouldExecuteThisProgram) {
-      println(s"Node ${node.getId} has forwarded its computation to another node")
-      for {
-        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](environment.getNodeByID(surrogateId.get)).filter(this.getClass.isInstance(_))
-        if action.programNameMolecule == programNameMolecule
-      } action.clonedContext = Some(context)
+      // This node has forwarded the module to another node
+      // This node should provide the context to the surrogate node to execute the program
+      val surrogateNode = surrogateId match {
+        case Some(id) => environment.getNodeByID(id)
+        case None => throw new IllegalStateException(s"The Node ${node.getId} should have forwarded the program to another node")
+      }
+      // Set into the surrogate node the context of the original node
+      getScafiProgramFromNode(surrogateNode).foreach { action => action.setContextFor(node.getId, context) }
       completed = true
       return
     }
 
     if (isSurrogate) {
-      println(s"Surrogate ${node.getId} computes $programName")
-      onBehalfOf.foreach(deviceId => {
-        clonedContext.foreach(ctx => {
-          println("Surrogate context is not null, using it")
-          val surrogateResult = program(ctx)
-          val toSend = NeighborData(surrogateResult, position, alchemistCurrentTime)
+      // Surrogate node must execute the program for all the nodes that have forwarded the program to it
+      surrogateForNodes.foreach(deviceId => {
+        contextsMap.get(deviceId).foreach(contextForNode => {
+          val computedResult = program(contextForNode)
+          val originalNodePosition = environment.getPosition(environment.getNodeByID(deviceId))
+          val toSend = NeighborData(computedResult, originalNodePosition, alchemistCurrentTime)
           surrogateComputedResult = surrogateComputedResult + (deviceId -> toSend)
         })
       })
@@ -198,9 +204,18 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     completed = true
   }
 
+  def getScafiProgramFromNode(node: Node[T]): Option[RunScafiProgram[T, P]] =
+    ScafiIncarnationUtils.allScafiProgramsFor[T, P](environment.getNodeByID(surrogateId.get))
+      .filter(this.getClass.isInstance(_))
+      .collectFirst { case action if action.programNameMolecule == programNameMolecule => action }
+
   def sendExport(id: ID, exportData: NeighborData[P]): Unit = neighborhoodManager += id -> exportData
 
   def getExport(id: ID): Option[NeighborData[P]] = neighborhoodManager.get(id)
+
+  def setContextFor(id: ID, context: CONTEXT): Unit = contextsMap += id -> context
+
+  def getResultFor(id: ID): Option[NeighborData[P]] = surrogateComputedResult.get(id)
 
   def isComputationalCycleComplete: Boolean = completed
 

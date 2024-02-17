@@ -62,45 +62,56 @@ class SendScafiMessage[T, P <: Position[P]](
   /** Effectively executes this action. */
   override def execute(): Unit = {
     if (program.isSurrogate) {
-      println("Surrogate " + device.getNode.getId + " is not allowed to send messages")
+      // Skip the send if it is a surrogate
       program.prepareForComputationalCycle
       return
     }
     if (!program.shouldExecuteThisProgram) {
-      println(s"Node ${device.getNode.getId} has offloaded $program to a surrogate")
       // Get program from surrogate
-      val surrogateId = program.offloadingMapping.filter { case ((programName, source), _) =>
-        source == device.getNode.getId && programName == program.programNameMolecule.getName
-      }.values.head
-
-      val surrogateNode = environment.getNodeByID(surrogateId)
-      for {
-        action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](surrogateNode).filter(program.getClass.isInstance(_))
-        if action.programNameMolecule == program.programNameMolecule
-      } {
-        action.surrogateComputedResult.get(device.getNode.getId).foreach(toSend => {
-          device.getNode().setConcentration(program.programNameMolecule, toSend.exportData.root[T]())
-          for {
-            neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
-            action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
-            if action.programNameMolecule == program.programNameMolecule
-          } action.sendExport(device.getNode.getId, toSend)
-        })
-      }
-
+      val surrogateNode = getSurrogateNode(program)
+      getSurrogateProgramFromNode(surrogateNode).foreach(surrogateProgram => {
+        // Write the result of the surrogate program to the node requesting the result
+        surrogateProgram.getResultFor(device.getNode.getId) match {
+          case Some(computedResult) =>
+            device.getNode().setConcentration(program.programNameMolecule, computedResult.exportData.root())
+            // Send the result to the neighbors of the device requesting the result
+            getNeighborProgramsFromNode(device.getNode).foreach(action => {
+              action.sendExport(device.getNode.getId, computedResult)
+            })
+          case _ => () // Skip the message sending if the surrogate has not computed the result yet
+        }
+      })
       program.prepareForComputationalCycle
       return
     }
 
     // ----------------- ORIGINAL CODE -----------------
     val toSend = program.getExport(device.getNode.getId).get
-    for {
-      neighborhood <- environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala
-      action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
-      if action.programNameMolecule == program.programNameMolecule
-    } action.sendExport(device.getNode.getId, toSend)
+    getNeighborProgramsFromNode(device.getNode).foreach(action => {
+      action.sendExport(device.getNode.getId, toSend)
+    })
     program.prepareForComputationalCycle
   }
+
+  private def getSurrogateNode(program: RunScafiProgram[T, P]): Node[T] = {
+    val surrogateId = program.offloadingMapping.filter { case ((programName, source), _) =>
+      source == device.getNode.getId && programName == program.programNameMolecule.getName
+    }.values.head
+    environment.getNodeByID(surrogateId)
+  }
+
+  private def getSurrogateProgramFromNode(surrogateNode: Node[T]): Option[RunScafiProgram[T, P]] =
+    ScafiIncarnationUtils.allScafiProgramsFor[T, P](surrogateNode).filter(program.getClass.isInstance(_))
+      .collectFirst { case action if action.programNameMolecule == program.programNameMolecule => action }
+
+
+  private def getNeighborProgramsFromNode(node: Node[T]): Iterator[RunScafiProgram[T, P]] =
+    for {
+      neighborhood <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
+      action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
+      if action.programNameMolecule == program.programNameMolecule
+    } yield action
+
 
   /** @return The context for this action. */
   override def getContext: Context = Context.NEIGHBORHOOD
