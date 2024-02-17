@@ -16,7 +16,8 @@ variables:
     language: scala
     formula: |
       Map(
-        ("\"it.unibo.sim.Channel2\"" -> 4) -> cloudNode
+        ("\"it.unibo.sim.Channel2\"" -> 4) -> cloudNode,
+        ("\"it.unibo.sim.Channel2\"" -> 8) -> cloudNode
       )
 
 _constants:
@@ -25,7 +26,6 @@ _constants:
   retentionTime: &retentionTime 5.0
   programRate1: &programRate1 1.0
   programRate2: &programRate2 2.0
-  dependencyGraph: &dependencyGraph "scala.collection.Map(\"it.unibo.sim.Channel1\" -> List(\"it.unibo.sim.Channel2\"))"
 
 seeds:
   scenario: *random
