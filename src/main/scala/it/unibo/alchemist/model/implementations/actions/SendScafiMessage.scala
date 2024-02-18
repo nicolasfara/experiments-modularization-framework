@@ -78,6 +78,8 @@ class SendScafiMessage[T, P <: Position[P]](
             getNeighborProgramsFromNode(device.getNode).foreach(action => {
               action.sendExport(device.getNode.getId, computedResult)
             })
+            // Send to self the result
+            program.sendExport(device.getNode.getId, computedResult)
           case _ => () // Skip the message sending if the surrogate has not computed the result yet
         }
       })
@@ -104,14 +106,12 @@ class SendScafiMessage[T, P <: Position[P]](
     ScafiIncarnationUtils.allScafiProgramsFor[T, P](surrogateNode).filter(program.getClass.isInstance(_))
       .collectFirst { case action if action.programNameMolecule == program.programNameMolecule => action }
 
-
   private def getNeighborProgramsFromNode(node: Node[T]): Iterator[RunScafiProgram[T, P]] =
     for {
       neighborhood <- environment.getNeighborhood(node).getNeighbors.iterator().asScala
       action <- ScafiIncarnationUtils.allScafiProgramsFor[T, P](neighborhood).filter(program.getClass.isInstance(_))
       if action.programNameMolecule == program.programNameMolecule
     } yield action
-
 
   /** @return The context for this action. */
   override def getContext: Context = Context.NEIGHBORHOOD
