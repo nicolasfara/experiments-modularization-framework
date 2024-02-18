@@ -10,7 +10,8 @@ class Channel2 extends MyAggregateProgram {
     val distanceBetweenSourceAndDestination = distanceBetween(source, destination)
     node.put("distanceBetween", distanceBetweenSourceAndDestination)
 
-    val result = localDistanceValue <= distanceBetweenSourceAndDestination + width
+    val result = (!localDistanceValue.isInfinite && !distanceBetweenSourceAndDestination.isInfinite) &&
+      localDistanceValue <= distanceBetweenSourceAndDestination + width
     node.put("inChannel", result)
     result
   }
