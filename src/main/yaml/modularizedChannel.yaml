@@ -1,5 +1,12 @@
 incarnation: scafi
 
+_constants:
+  source: &source 1
+  destination: &destination 19
+  retentionTime: &retentionTime 5.0
+  programRate1: &programRate1 1.0
+  programRate2: &programRate2 2.0
+
 variables:
   random: &random
     min: 0
@@ -10,44 +17,26 @@ variables:
     formula: 1.5
     language: scala
   cloudNode: &cloudNode
-    formula: 6
+    formula: 0
     language: scala
   offloadingMapping: &offloadingMapping
     language: scala
     formula: |
       Map(
         ("\"it.unibo.sim.Channel2\"" -> 4) -> cloudNode,
-        ("\"it.unibo.sim.Channel2\"" -> 8) -> cloudNode
+        ("\"it.unibo.sim.Channel2\"" -> 8) -> cloudNode,
+        ("\"it.unibo.sim.Channel2\"" -> 19) -> cloudNode
       )
-
-_constants:
-  source: &source 0
-  destination: &destination 19
-  retentionTime: &retentionTime 5.0
-  programRate1: &programRate1 1.0
-  programRate2: &programRate2 2.0
 
 seeds:
   scenario: *random
   simulation: *random
-
-#environment:
-#  type: OSMEnvironment
-#  parameters: ["vcm.pbf", false]
 
 network-model:
   type: ConnectWithinDistanceAndCloud
   parameters: [*range, *cloudNode]
 
 _reactions:
-  - program: &setupNode
-    - time-distribution: *programRate1
-      type: Event
-      actions:
-        - type: RunScafiProgram
-          parameters: [it.unibo.alchemist.model.implementations.reactions.SetupNode]
-    - program: send
-
   - program: &channel1
     - time-distribution: *programRate1
       type: Event
@@ -63,29 +52,6 @@ _reactions:
         - type: RunScafiProgram
           parameters: [it.unibo.sim.Channel2, *retentionTime]
     - program: send
-
-  - program: &channel2proxy
-    - time-distribution: *programRate2
-      type: Event
-      actions:
-        - type: RunScafiProgram
-          parameters: [ it.unibo.sim.Channel2, *retentionTime, 6, -1]
-    - program: send
-
-  - program: &dev4channel2
-    - time-distribution: *programRate2
-      type: Event
-      actions:
-        - type: RunScafiProgram
-          parameters: [it.unibo.sim.Channel2, *retentionTime, -1, 4] #FIX
-    - program: send
-#  - program: &dev0channel1
-#      - time-distribution: *programRate2
-#        type: Event
-#        actions:
-#          - type: RunScafiProgram
-#            parameters: [it.unibo.sim.Channel1, *retentionTime, 0, [it.unibo.sim.Channel2]]
-#      - program: send
 
 environment:
   type: Continuous2DEnvironment
@@ -106,8 +72,6 @@ deployments: ## i.e, how to place nodes
   contents:
     - molecule: offloadingMapping
       concentration: *offloadingMapping
-    - molecule: cloudNode
-      concentration: *cloudNode
     - molecule: source
       concentration: *source
     - molecule: destination
