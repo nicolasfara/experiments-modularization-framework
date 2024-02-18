@@ -206,7 +206,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   }
 
   def getScafiProgramFromNode(node: Node[T]): Option[RunScafiProgram[T, P]] =
-    ScafiIncarnationUtils.allScafiProgramsFor[T, P](environment.getNodeByID(surrogateId.get))
+    ScafiIncarnationUtils.allScafiProgramsFor[T, P](environment.getNodeByID(node.getId))
       .filter(this.getClass.isInstance(_))
       .collectFirst { case action if action.programNameMolecule == programNameMolecule => action }
 
