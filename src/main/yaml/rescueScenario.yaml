@@ -1,0 +1,95 @@
+incarnation: scafi
+
+_constants:
+  source: &source 1
+  destination: &destination 19
+  retentionTime: &retentionTime 5.0
+  neighborRange: &neighborRange 1.5
+  cloudNode: &cloudNode 0
+  terminationTime: &terminationTime 3600 # 1 hours
+
+variables:
+  random: &random
+    min: 0
+    max: 5
+    step: 1
+    default: 0
+  scenarioType: # 0 = monolithic, 1 = modularization
+    type: ArbitraryVariable
+    parameters: [1, [0, 1]]
+  # -- Effectively final variables
+  programRate1: &programRate1
+    language: scala
+    formula: |
+      if (scenarioType == 0) 1.0 else 1.0
+  programRate2: &programRate2
+    language: scala
+    formula: |
+      if (scenarioType == 0) 1.0 else 2.0
+  offloadingMapping: &offloadingMapping
+    language: scala
+    formula: |
+      if (scenarioType == 1) {
+        Map(
+          ("\"it.unibo.sim.Channel2\"" -> 4) -> 0,
+          ("\"it.unibo.sim.Channel2\"" -> 8) -> 0,
+          ("\"it.unibo.sim.Channel2\"" -> 19) -> 0
+        )
+      } else Map()
+
+seeds:
+  scenario: *random
+  simulation: *random
+
+network-model:
+  type: ConnectWithinDistanceAndCloud
+  parameters: [*neighborRange, *cloudNode]
+
+_reactions:
+  - program: &channel1
+    - time-distribution: *programRate1
+      type: Event
+      actions:
+        - type: RunScafiProgram
+          parameters: [it.unibo.sim.Channel1, *retentionTime]
+    - program: send
+
+  - program: &channel2
+    - time-distribution: *programRate2
+      type: Event
+      actions:
+        - type: RunScafiProgram
+          parameters: [it.unibo.sim.Channel2, *retentionTime]
+    - program: send
+
+environment:
+  type: Continuous2DEnvironment
+  parameters: []
+  global-programs:
+    - time-distribution:
+        type: Trigger
+        parameters: [ 0 ]
+      type: SetupNode
+      parameters: [ *cloudNode, *terminationTime ]
+
+deployments: ## i.e, how to place nodes
+  type: Grid
+  parameters: [0, 0, 5, 5, 1, 1, 0.1, 0.1]
+  programs:
+    - *channel1
+    - *channel2
+  contents:
+    - molecule: offloadingMapping
+      concentration: *offloadingMapping
+    - molecule: source
+      concentration: *source
+    - molecule: destination
+      concentration: *destination
+    - molecule: inChannel
+      concentration: false
+    - molecule: channelWidth
+      concentration: 0.1
+
+terminate:
+  - type: AfterTime
+    parameters: [ *terminationTime ]
