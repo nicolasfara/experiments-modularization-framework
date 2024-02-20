@@ -6,7 +6,7 @@ _constants:
   retentionTime: &retentionTime 5.0
   neighborRange: &neighborRange 1.5
   cloudNode: &cloudNode 0
-  terminationTime: &terminationTime 3600 # 1 hours
+  terminationTime: &terminationTime 3600 # 1 hour
 
 variables:
   random: &random
@@ -30,11 +30,7 @@ variables:
     language: scala
     formula: |
       if (scenarioType == 1) {
-        Map(
-          ("\"it.unibo.sim.Channel2\"" -> 4) -> 0,
-          ("\"it.unibo.sim.Channel2\"" -> 8) -> 0,
-          ("\"it.unibo.sim.Channel2\"" -> 19) -> 0
-        )
+        Map()
       } else Map()
 
 seeds:
@@ -51,16 +47,16 @@ _reactions:
       type: Event
       actions:
         - type: RunScafiProgram
-          parameters: [it.unibo.sim.Channel1, *retentionTime]
+          parameters: [it.unibo.sim.EmergencyService, *retentionTime]
     - program: send
 
-  - program: &channel2
-    - time-distribution: *programRate2
-      type: Event
-      actions:
-        - type: RunScafiProgram
-          parameters: [it.unibo.sim.Channel2, *retentionTime]
-    - program: send
+#  - program: &channel2
+#    - time-distribution: *programRate2
+#      type: Event
+#      actions:
+#        - type: RunScafiProgram
+#          parameters: [it.unibo.sim.Channel2, *retentionTime]
+#    - program: send
 
 environment:
   type: Continuous2DEnvironment
@@ -77,18 +73,10 @@ deployments: ## i.e, how to place nodes
   parameters: [0, 0, 5, 5, 1, 1, 0.1, 0.1]
   programs:
     - *channel1
-    - *channel2
+#    - *channel2
   contents:
     - molecule: offloadingMapping
       concentration: *offloadingMapping
-    - molecule: source
-      concentration: *source
-    - molecule: destination
-      concentration: *destination
-    - molecule: inChannel
-      concentration: false
-    - molecule: channelWidth
-      concentration: 0.1
 
 terminate:
   - type: AfterTime
