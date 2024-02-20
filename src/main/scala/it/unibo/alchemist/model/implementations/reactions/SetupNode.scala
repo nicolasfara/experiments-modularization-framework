@@ -24,7 +24,7 @@ class SetupNode[T, P <: Position[P]](
   private val isRescuer = new SimpleMolecule("isRescuer")
   private val isUser = new SimpleMolecule("isUser")
 
-  private lazy val rescuerNodes: Int = Math.ceil(environment.getNodes.size() * 0.30).toInt
+  private lazy val rescuerNodes: Int = Math.ceil(environment.getNodes.size() * 0.10).toInt
   private lazy val userNodes: Int = environment.getNodeCount - rescuerNodes - 1 // the cloud is not a user
 
   override def initializationComplete(time: Time, environment: Environment[T, _]): Unit =
@@ -53,11 +53,17 @@ class SetupNode[T, P <: Position[P]](
     rescuerSelectedNodes.foreach(_.setConcentration(isRescuer, true.asInstanceOf[T]))
     userSelectedNodes.foreach(_.setConcentration(isUser, true.asInstanceOf[T]))
 
-    val nodesRequiringIntervention = userSelectedNodes.filter(_ => randomGenerator.nextBoolean())
     // Define intervention time for each user
+    val nodesRequiringIntervention = userSelectedNodes.filter(_ => randomGenerator.nextBoolean())
     nodesRequiringIntervention.foreach { userNode =>
       val interventionTime = randomGenerator.nextDouble() * terminationTime
       userNode.setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
+    }
+
+    // Setup "movementTarget" to the local position of each node
+    environment.getNodes.stream().forEach { node =>
+      val position = environment.getPosition(node)
+      node.setConcentration(new SimpleMolecule("movementTarget"), position.asInstanceOf[T])
     }
   }
 }
