@@ -1,7 +1,7 @@
 incarnation: scafi
 
 _constants:
-  retentionTime: &retentionTime 5.0
+  retentionTime: &retentionTime 10.0
   neighborRange: &neighborRange 1.5
   cloudNode: &cloudNode 0
   movementSpeed: &movementSpeed 0.005 # m/s
@@ -16,6 +16,10 @@ variables:
   scenarioType: &scenarioType # 0 = monolithic, 1 = modularization
     type: ArbitraryVariable
     parameters: [1, [0, 1]]
+  nodeSide: &nodeSide
+    type: ArbitraryVariable
+    parameters: [10, [5, 10]]
+
   # -- Effectively final variables
   programRate1: &programRate1
     language: scala
@@ -24,17 +28,21 @@ variables:
   programRate2: &programRate2
     language: scala
     formula: |
-      if (scenarioType == 0) 1.0 else 2.0
-  nodes:
+      if (scenarioType == 0) 1.0 else 0.2
+  totalNodes:
     language: scala
-    formula: 50
+    formula: Math.pow(nodeSide.asInstanceOf[Int], 2).toInt - 1
   offloadingMapping: &offloadingMapping
     language: scala
     formula: |
-      if (scenarioType == 1) {
-        (1 to nodes.asInstanceOf[Int])
-          .map(i => ("\"it.unibo.sim.EmergencyService\"" -> i) -> 0)
+      s"""
+      if ($scenarioType == 1) {
+        (1 to ${totalNodes.asInstanceOf[Int]})
+          .filter(_ % 2 == 0)
+          .map(i => ("it.unibo.sim.EmergencyService" -> i) -> 0)
+          .toMap
       } else Map()
+      """
 
 seeds:
   scenario: *random
@@ -80,7 +88,7 @@ environment:
 
 deployments: ## i.e, how to place nodes
   type: Grid
-  parameters: [0, 0, 10, 10, 1, 1, 0.5, 0.5]
+  parameters: [0, 0, *nodeSide, *nodeSide, 1, 1, 0.5, 0.5]
   programs:
     - *channel1
     - *channel2

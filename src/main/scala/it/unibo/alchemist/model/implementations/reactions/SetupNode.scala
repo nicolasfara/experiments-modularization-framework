@@ -39,7 +39,7 @@ class SetupNode[T, P <: Position[P]](
       .filter(node => node.getConcentration(destinationNode) == node.getId)
       .forEach(_.setConcentration(isDestination, true.asInstanceOf[T]))
     environment.getNodeByID(cloudId).setConcentration(isCloud, true.asInstanceOf[T])
-    val mapping = environment.getNodes.stream().findFirst().get().getConcentration(offloadingMapping).asInstanceOf[Iterable[((String, Int), Int)]].toMap
+    val mapping = environment.getNodes.stream().findFirst().get().getConcentration(offloadingMapping).asInstanceOf[Map[(String, Int), Int]]
     val nodesRequestOffloading = mapping.map { case ((_, nodeId), _) => nodeId }.toSet
     nodesRequestOffloading
       .foreach(nodeId => environment.getNodeByID(nodeId).setConcentration(isOffloading, true.asInstanceOf[T]))
