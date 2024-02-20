@@ -1,22 +1,23 @@
 package it.unibo.sim
 
-import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist.ID
-
 class EmergencyService extends MyAggregateProgram {
   override def main(): Any = {
     val currentSimTime = alchemistEnvironment.getSimulation.getTime.toDouble
     val interventionTime = senseOr[Double]("interventionTime", Double.PositiveInfinity)
     val isRescuer = senseOr[Boolean]("isRescuer", false)
 
-    rep(false) { intervened =>
-      val isInterventionRequired = currentSimTime >= interventionTime
+    val initial = (Double.PositiveInfinity, Double.PositiveInfinity)
+
+    val (_, result) = rep(initial) { case (lastInterventionTime, _) =>
+      val isInterventionRequired = currentSimTime >= interventionTime && !(currentSimTime >= lastInterventionTime)
       node.put("needsIntervention", isInterventionRequired)
-      val isRescuerIntervened = foldhood(false)(_ || _)(nbr { isRescuer })
+      val isRescuerIntervened = foldhood(isRescuer)(_ || _)(nbr { isRescuer })
 
-      val moduleResult = G[(ID, Boolean)](isInterventionRequired, nbr { mid -> isInterventionRequired }, identity, nbrRange _)
-      node.put("it.unibo.sim.EmergencyService", moduleResult)
+      val moduleResult = classicGradient(isInterventionRequired)
 
-      isInterventionRequired && !(intervened || isRescuerIntervened)
+      val time = if (isRescuerIntervened) currentSimTime else lastInterventionTime
+      (time, moduleResult)
     }
+    result
   }
 }
