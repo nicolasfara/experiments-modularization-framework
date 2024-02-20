@@ -12,7 +12,6 @@ class SetupNode[T, P <: Position[P]](
   randomGenerator: RandomGenerator,
   cloudId: Int,
   terminationTime: Double = 3600,
-  scenarioType: Int = 1,
 ) extends AbstractGlobalReaction[T, P](environment, distribution) {
 
   private val sourceNode = new SimpleMolecule("source")

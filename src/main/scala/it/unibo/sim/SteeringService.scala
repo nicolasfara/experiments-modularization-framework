@@ -18,7 +18,6 @@ class SteeringService extends MyAggregateProgram {
         val parentPosition = alchemistEnvironment.getPosition(parentNode)
         if (isRescuer) {
           node.put("movementTarget", parentPosition.plus(Array(0.01, 0.01)))
-          node.put("DEBUG: effectiveParentPosition", parentPosition)
         }
       })
   }

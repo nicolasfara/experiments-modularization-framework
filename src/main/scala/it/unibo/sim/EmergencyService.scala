@@ -15,6 +15,10 @@ class EmergencyService extends MyAggregateProgram {
 
       val moduleResult = classicGradient(isInterventionRequired)
 
+      if (isInterventionRequired && isRescuerIntervened) {
+        node.put("requiredInterventionTime", currentSimTime - interventionTime)
+      }
+
       val time = if (isRescuerIntervened) currentSimTime else lastInterventionTime
       (time, moduleResult)
     }

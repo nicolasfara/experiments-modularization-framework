@@ -13,22 +13,21 @@ variables:
     max: 5
     step: 1
     default: 0
-  scenarioType: &scenarioType # 0 = monolithic, 1 = modularization
+  scenarioType: # 0 = monolithic, 1 = modularization
     type: ArbitraryVariable
-    parameters: [1, [0, 1]]
+    parameters: [0, [0, 1]]
   nodeSide: &nodeSide
     type: ArbitraryVariable
     parameters: [10, [5, 10]]
 
   # -- Effectively final variables
-  programRate1: &programRate1
+  emergencyServiceProgramRate: &emergencyServiceProgramRate
     language: scala
     formula: |
-      if (scenarioType == 0) 1.0 else 1.0
-  programRate2: &programRate2
+      if (scenarioType == 0) 1.0 else 5.0
+  steeringServiceProgramRate: &steeringServiceProgramRate
     language: scala
-    formula: |
-      if (scenarioType == 0) 1.0 else 0.2
+    formula: 1.0
   totalNodes:
     language: scala
     formula: Math.pow(nodeSide.asInstanceOf[Int], 2).toInt - 1
@@ -38,7 +37,6 @@ variables:
       s"""
       if ($scenarioType == 1) {
         (1 to ${totalNodes.asInstanceOf[Int]})
-          .filter(_ % 2 == 0)
           .map(i => ("it.unibo.sim.EmergencyService" -> i) -> 0)
           .toMap
       } else Map()
@@ -53,16 +51,16 @@ network-model:
   parameters: [*neighborRange, *cloudNode]
 
 _reactions:
-  - program: &channel1
-    - time-distribution: *programRate1
+  - program: &emergencyService
+    - time-distribution: *emergencyServiceProgramRate
       type: Event
       actions:
         - type: RunScafiProgram
           parameters: [it.unibo.sim.EmergencyService, *retentionTime]
     - program: send
 
-  - program: &channel2
-    - time-distribution: *programRate2
+  - program: &steeringService
+    - time-distribution: *steeringServiceProgramRate
       type: Event
       actions:
         - type: RunScafiProgram
@@ -84,14 +82,14 @@ environment:
         type: Trigger
         parameters: [ 0 ]
       type: SetupNode
-      parameters: [ *cloudNode, *terminationTime, *scenarioType ]
+      parameters: [ *cloudNode, *terminationTime ]
 
 deployments: ## i.e, how to place nodes
   type: Grid
   parameters: [0, 0, *nodeSide, *nodeSide, 1, 1, 0.5, 0.5]
   programs:
-    - *channel1
-    - *channel2
+    - *emergencyService
+    - *steeringService
     - *movement
   contents:
     - molecule: offloadingMapping
