@@ -13,7 +13,7 @@ variables:
     max: 5
     step: 1
     default: 0
-  scenarioType: # 0 = monolithic, 1 = modularization
+  scenarioType: &scenarioType # 0 = monolithic, 1 = modularization
     type: ArbitraryVariable
     parameters: [1, [0, 1]]
   # -- Effectively final variables
@@ -25,11 +25,15 @@ variables:
     language: scala
     formula: |
       if (scenarioType == 0) 1.0 else 2.0
+  nodes:
+    language: scala
+    formula: 50
   offloadingMapping: &offloadingMapping
     language: scala
     formula: |
       if (scenarioType == 1) {
-        Map()
+        (1 to nodes.asInstanceOf[Int])
+          .map(i => ("\"it.unibo.sim.EmergencyService\"" -> i) -> 0)
       } else Map()
 
 seeds:
@@ -72,7 +76,7 @@ environment:
         type: Trigger
         parameters: [ 0 ]
       type: SetupNode
-      parameters: [ *cloudNode, *terminationTime ]
+      parameters: [ *cloudNode, *terminationTime, *scenarioType ]
 
 deployments: ## i.e, how to place nodes
   type: Grid

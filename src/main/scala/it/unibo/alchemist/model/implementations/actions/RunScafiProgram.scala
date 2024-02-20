@@ -54,7 +54,8 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   def asMolecule = programNameMolecule
 
   val offloadingMapping = node.getConcentration(new SimpleMolecule("offloadingMapping"))
-    .asInstanceOf[Map[(String, Int), Int]]
+    .asInstanceOf[Iterable[((String, Int), Int)]]
+    .toMap
   val isSurrogate = offloadingMapping.values.exists(_ == node.getId)
   val shouldExecuteThisProgram = !offloadingMapping
     .exists { case ((program, source), _) => source == node.getId && program == programName }

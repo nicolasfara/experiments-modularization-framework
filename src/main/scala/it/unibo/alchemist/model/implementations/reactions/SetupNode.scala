@@ -1,7 +1,7 @@
 package it.unibo.alchemist.model.implementations.reactions
 
 import it.unibo.alchemist.model.molecules.SimpleMolecule
-import it.unibo.alchemist.model.{Environment, Node, Position, Time, TimeDistribution}
+import it.unibo.alchemist.model.{Environment, Position, Time, TimeDistribution}
 import org.apache.commons.math3.random.RandomGenerator
 
 import scala.jdk.CollectionConverters._
@@ -12,6 +12,7 @@ class SetupNode[T, P <: Position[P]](
   randomGenerator: RandomGenerator,
   cloudId: Int,
   terminationTime: Double = 3600,
+  scenarioType: Int = 1,
 ) extends AbstractGlobalReaction[T, P](environment, distribution) {
 
   private val sourceNode = new SimpleMolecule("source")
@@ -38,7 +39,7 @@ class SetupNode[T, P <: Position[P]](
       .filter(node => node.getConcentration(destinationNode) == node.getId)
       .forEach(_.setConcentration(isDestination, true.asInstanceOf[T]))
     environment.getNodeByID(cloudId).setConcentration(isCloud, true.asInstanceOf[T])
-    val mapping = environment.getNodes.stream().findFirst().get().getConcentration(offloadingMapping).asInstanceOf[Map[(String, Int), Int]]
+    val mapping = environment.getNodes.stream().findFirst().get().getConcentration(offloadingMapping).asInstanceOf[Iterable[((String, Int), Int)]].toMap
     val nodesRequestOffloading = mapping.map { case ((_, nodeId), _) => nodeId }.toSet
     nodesRequestOffloading
       .foreach(nodeId => environment.getNodeByID(nodeId).setConcentration(isOffloading, true.asInstanceOf[T]))
