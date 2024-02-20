@@ -53,8 +53,9 @@ class SetupNode[T, P <: Position[P]](
     rescuerSelectedNodes.foreach(_.setConcentration(isRescuer, true.asInstanceOf[T]))
     userSelectedNodes.foreach(_.setConcentration(isUser, true.asInstanceOf[T]))
 
+    val nodesRequiringIntervention = userSelectedNodes.filter(_ => randomGenerator.nextBoolean())
     // Define intervention time for each user
-    userSelectedNodes.foreach { userNode =>
+    nodesRequiringIntervention.foreach { userNode =>
       val interventionTime = randomGenerator.nextDouble() * terminationTime
       userNode.setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
     }
