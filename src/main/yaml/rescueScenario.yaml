@@ -76,7 +76,7 @@ environment:
 
 deployments: ## i.e, how to place nodes
   type: Grid
-  parameters: [0, 0, 5, 5, 1, 1, 0.1, 0.1]
+  parameters: [0, 0, 10, 10, 1, 1, 0.5, 0.5]
   programs:
     - *channel1
     - *channel2

@@ -45,7 +45,7 @@ class SetupNode[T, P <: Position[P]](
 
     // select rescuer and user nodes
     val candidateNodes = environment.getNodes.stream().filter(n => n.getId != cloudId).toList.asScala
-    val rescuerSelectedNodes = candidateNodes.sortBy(_ => randomGenerator.nextInt(3) - 1).take(rescuerNodes) // shuffle the list to take random rescuers
+    val rescuerSelectedNodes = candidateNodes.sortWith((_, _) => randomGenerator.nextBoolean()).take(rescuerNodes) // shuffle the list to take random rescuers
     val userSelectedNodes = candidateNodes.diff(rescuerSelectedNodes)
     assert(rescuerSelectedNodes.size == rescuerNodes)
     assert(userSelectedNodes.size == userNodes)
@@ -54,7 +54,7 @@ class SetupNode[T, P <: Position[P]](
     userSelectedNodes.foreach(_.setConcentration(isUser, true.asInstanceOf[T]))
 
     // Define intervention time for each user
-    val nodesRequiringIntervention = userSelectedNodes.filter(_ => randomGenerator.nextBoolean())
+    val nodesRequiringIntervention = userSelectedNodes.sortWith((_, _) => randomGenerator.nextBoolean()).take(Math.ceil(userNodes * 0.50).toInt)
     nodesRequiringIntervention.foreach { userNode =>
       val interventionTime = randomGenerator.nextDouble() * terminationTime
       userNode.setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
