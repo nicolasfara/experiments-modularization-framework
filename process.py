@@ -435,6 +435,8 @@ if __name__ == '__main__':
 
     homo_saved = experiment_homogeneous['saved[sum]'].to_numpy()
     hetero_saved = experiment_heterogeneous['saved[sum]'].to_numpy()
+    homo_messages = experiment_homogeneous['messagesCount[sum]'].to_numpy()
+    hetero_messages = experiment_heterogeneous['messagesCount[sum]'].to_numpy()
 
     # homo_needs_intervention = experiment_homogeneous['needsIntervention[sum]'].to_numpy()
     # hetero_needs_intervention = experiment_heterogeneous['needsIntervention[sum]'].to_numpy()
@@ -442,8 +444,18 @@ if __name__ == '__main__':
     saved_plot = pd.DataFrame(
         {
             "time": x_time,
-            "Intervention time [Baseline]": homo_saved,
-            "Intervention time [Modularised]": hetero_saved,
+            "Baseline": homo_saved,
+            "Modularised": hetero_saved,
+            # "Pending rescuers [Baseline]": homo_needs_intervention,
+            # "Pending rescuers [Modularised]": hetero_needs_intervention,
+        }
+    )
+
+    messages_plot = pd.DataFrame(
+        {
+            "time": x_time,
+            "Baseline": homo_messages,
+            "Modularised": hetero_messages,
             # "Pending rescuers [Baseline]": homo_needs_intervention,
             # "Pending rescuers [Modularised]": hetero_needs_intervention,
         }
@@ -451,11 +463,11 @@ if __name__ == '__main__':
 
     ax = saved_plot.plot(
         x="time",
-        y=["Intervention time [Baseline]", "Intervention time [Modularised]"],
+        y=["Baseline", "Modularised"],
         xlim=(0, 3700),
-        title="Average intervention time",
+        title="Average saved users",
         xlabel="time (s)",
-        ylabel="Waited time (s)",
+        ylabel="Saved users",
         figsize=(10, 6),
     )
     ax.title.set_size(24)
@@ -463,19 +475,20 @@ if __name__ == '__main__':
     ax.yaxis.label.set_size(18)
     ax.grid(color="gray", linestyle="--", linewidth=0.5)
     plt.show()
-    #
-    # ax2 = saved_plot.plot(
-    #     x="time",
-    #     y=["Pending rescuers [Baseline]", "Pending rescuers [Modularised]"],
-    #     ylabel="Users waiting intervention",
-    #     xlim=(500, 3700),
-    #     title="Average users waiting intervention",
-    #     xlabel="time (s)",
-    #     figsize=(10, 6),
-    # )
-    #
-    # ax2.title.set_size(24)
-    # ax2.xaxis.label.set_size(18)
-    # ax2.yaxis.label.set_size(18)
-    # ax2.grid(color="gray", linestyle="--", linewidth=0.5)
-    # plt.show()
+
+    ax = messages_plot.plot(
+        x="time",
+        y=["Baseline", "Modularised"],
+        xlim=(0, 3700),
+        ylim=(700, 1000),
+        title="Messages per seconds",
+        xlabel="time (s)",
+        ylabel="Messages",
+        figsize=(10, 6),
+    )
+    ax.title.set_size(24)
+    ax.xaxis.label.set_size(18)
+    ax.yaxis.label.set_size(18)
+    ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    plt.show()
+

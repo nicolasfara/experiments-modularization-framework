@@ -9,6 +9,10 @@ class SteeringService extends MyAggregateProgram {
     val isRescuer = senseOr[Boolean]("isRescuer", false)
     val emergencyServiceResult = senseOr[Double]("it.unibo.sim.EmergencyService", Double.PositiveInfinity)
     val parentNodeId = findParent(emergencyServiceResult)
+//
+//    if (isRescuer && mid() < 20) {
+//      println((mid(), alchemistEnvironment.getSimulation.getTime, currentPosition()))
+//    }
 
     // Update rescue target position
     alchemistEnvironment.getNodes.stream()

@@ -10,7 +10,7 @@ _constants:
 variables:
   random: &random
     min: 0
-    max: 5
+    max: 4
     step: 1
     default: 0
   scenarioType: # 0 = monolithic, 1 = modularization
@@ -90,7 +90,7 @@ deployments: ## i.e, how to place nodes
   programs:
     - *emergencyService
     - *steeringService
-#    - *movement
+    - *movement
   contents:
     - molecule: offloadingMapping
       concentration: *offloadingMapping
