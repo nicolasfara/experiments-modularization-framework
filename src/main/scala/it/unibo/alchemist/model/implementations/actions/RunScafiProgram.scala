@@ -69,7 +69,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
     .collectFirst { case id => id }
 
   // This set contains the nodes that have forwarded the program to this node
-  private val surrogateForNodes = offloadingMapping
+  val surrogateForNodes = offloadingMapping
     .filter { case ((_, _), destination) => destination == node.getId }
     .keys
     .map { case (_, source) => source}

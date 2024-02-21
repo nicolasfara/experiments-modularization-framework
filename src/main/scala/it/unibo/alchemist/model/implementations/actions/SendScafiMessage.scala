@@ -14,6 +14,7 @@ import it.unibo.alchemist.model.ScafiIncarnationUtils._
 import it.unibo.alchemist.model.implementations.nodes.ScafiDevice
 import it.unibo.alchemist.model._
 import it.unibo.alchemist.model.actions.AbstractAction
+import it.unibo.alchemist.model.molecules.SimpleMolecule
 
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters._
@@ -61,6 +62,7 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
+    val messagesMolecule = new SimpleMolecule("messagesCount")
     if (program.isSurrogate) {
       // Skip the send if it is a surrogate
       program.prepareForComputationalCycle
@@ -80,6 +82,9 @@ class SendScafiMessage[T, P <: Position[P]](
             })
             // Send to self the result
             program.sendExport(device.getNode.getId, computedResult)
+            // Set the number of messages sent
+            val messages = environment.getNeighborhood(device.getNode()).size() + 2 // +2 because of the communication with the surrogate
+            device.getNode().setConcentration(messagesMolecule, messages.asInstanceOf[T])
           case _ => () // Skip the message sending if the surrogate has not computed the result yet
         }
       })
@@ -93,6 +98,8 @@ class SendScafiMessage[T, P <: Position[P]](
       action.sendExport(device.getNode.getId, toSend)
     })
     program.prepareForComputationalCycle
+    val messages = environment.getNeighborhood(device.getNode()).size()
+    device.getNode().setConcentration(messagesMolecule, messages.asInstanceOf[T])
   }
 
   private def getSurrogateNode(program: RunScafiProgram[T, P]): Node[T] = {

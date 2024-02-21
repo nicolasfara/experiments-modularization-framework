@@ -10,6 +10,7 @@ class SetupNode[T, P <: Position[P]](
   environment: Environment[T, P],
   distribution: TimeDistribution[T],
   randomGenerator: RandomGenerator,
+  seed: Int,
   cloudId: Int,
   terminationTime: Double = 3600,
 ) extends AbstractGlobalReaction[T, P](environment, distribution) {
@@ -43,22 +44,39 @@ class SetupNode[T, P <: Position[P]](
     nodesRequestOffloading
       .foreach(nodeId => environment.getNodeByID(nodeId).setConcentration(isOffloading, true.asInstanceOf[T]))
 
+    import scala.util.Random
+    Random.setSeed(seed)
+
     // select rescuer and user nodes
-    val candidateNodes = environment.getNodes.stream().filter(n => n.getId != cloudId).toList.asScala
-    val rescuerSelectedNodes = candidateNodes.sortWith((_, _) => randomGenerator.nextBoolean()).take(rescuerNodes) // shuffle the list to take random rescuers
-    val userSelectedNodes = candidateNodes.diff(rescuerSelectedNodes)
-    assert(rescuerSelectedNodes.size == rescuerNodes)
-    assert(userSelectedNodes.size == userNodes)
+    val candidate = (1 until environment.getNodeCount).toList
+    val shuffledCandidate = Random.shuffle(candidate)
+    val rescuerNodes = shuffledCandidate.take(Math.ceil(environment.getNodeCount * 0.10).toInt)
+    val userNodes = shuffledCandidate.diff(rescuerNodes)
 
-    rescuerSelectedNodes.foreach(_.setConcentration(isRescuer, true.asInstanceOf[T]))
-    userSelectedNodes.foreach(_.setConcentration(isUser, true.asInstanceOf[T]))
+    userNodes.foreach(environment.getNodeByID(_).setConcentration(isUser, true.asInstanceOf[T]))
+    rescuerNodes.foreach(environment.getNodeByID(_).setConcentration(isRescuer, true.asInstanceOf[T]))
 
-    // Define intervention time for each user
-    val nodesRequiringIntervention = userSelectedNodes.sortWith((_, _) => randomGenerator.nextBoolean()).take(Math.ceil(userNodes * 0.50).toInt)
+    val nodesRequiringIntervention = Random.shuffle(userNodes).take(Math.ceil(userNodes.size * 0.50).toInt)
     nodesRequiringIntervention.foreach { userNode =>
       val interventionTime = randomGenerator.nextDouble() * terminationTime
-      userNode.setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
+      environment.getNodeByID(userNode).setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
     }
+
+//    val candidateNodes = environment.getNodes.stream().filter(n => n.getId != cloudId).toList
+//    val rescuerSelectedNodes = Random.shuffle(candidateNodes).take(rescuerNodes) // shuffle the list to take random rescuers
+//    val userSelectedNodes = candidateNodes.diff(rescuerSelectedNodes)
+//    assert(rescuerSelectedNodes.size == rescuerNodes)
+//    assert(userSelectedNodes.size == userNodes)
+
+//    rescuerSelectedNodes.foreach(_.setConcentration(isRescuer, true.asInstanceOf[T]))
+//    userSelectedNodes.foreach(_.setConcentration(isUser, true.asInstanceOf[T]))
+//
+//    // Define intervention time for each user
+//    val nodesRequiringIntervention = Random.shuffle(userSelectedNodes).take(Math.ceil(userNodes * 0.50).toInt)
+//    nodesRequiringIntervention.foreach { userNode =>
+//      val interventionTime = randomGenerator.nextDouble() * terminationTime
+//      userNode.setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
+//    }
 
     // Setup "movementTarget" to the local position of each node
     environment.getNodes.stream().forEach { node =>

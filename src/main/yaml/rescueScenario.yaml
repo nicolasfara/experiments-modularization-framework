@@ -15,7 +15,7 @@ variables:
     default: 0
   scenarioType: # 0 = monolithic, 1 = modularization
     type: ArbitraryVariable
-    parameters: [0, [0, 1]]
+    parameters: [1, [0, 1]]
   nodeSide: &nodeSide
     type: ArbitraryVariable
     parameters: [10, [5, 10]]
@@ -82,7 +82,7 @@ environment:
         type: Trigger
         parameters: [ 0 ]
       type: SetupNode
-      parameters: [ *cloudNode, *terminationTime ]
+      parameters: [ *random, *cloudNode, *terminationTime ]
 
 deployments: ## i.e, how to place nodes
   type: Grid
@@ -90,12 +90,33 @@ deployments: ## i.e, how to place nodes
   programs:
     - *emergencyService
     - *steeringService
-    - *movement
+#    - *movement
   contents:
     - molecule: offloadingMapping
       concentration: *offloadingMapping
     - molecule: movementTarget
       concentration: (0, 0)
+
+export:
+  - type: CSVExporter
+    parameters:
+      exportPath: data
+      fileNameRoot: rescueScenario_export
+      interval: 10
+    data:
+      - time
+      - molecule: requiredInterventionTime
+        aggregators: [ min, max, mean, variance ]
+        value-filter: onlyfinite
+      - molecule: needsIntervention
+        aggregators: [ sum, variance ]
+        value-filter: onlyfinite
+      - molecule: messagesCount
+        aggregators: [ sum, mean ]
+        value-filter: onlyfinite
+      - molecule: saved
+        aggregators: [ sum ]
+        value-filter: onlyfinite
 
 terminate:
   - type: AfterTime

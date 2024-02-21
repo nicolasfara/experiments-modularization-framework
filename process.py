@@ -178,23 +178,23 @@ def beautifyValue(v):
 if __name__ == '__main__':
     # CONFIGURE SCRIPT
     # Where to find Alchemist data files
-    directory = 'data'
+    directory = './data'
     # Where to save charts
-    output_directory = 'charts'
+    output_directory = './charts'
     # How to name the summary of the processed data
     pickleOutput = 'data_summary'
     # Experiment prefixes: one per experiment (root of the file name)
-    experiments = ['simulation']
+    experiments = ['rescueScenario_export']
     floatPrecision = '{: 0.3f}'
     # Number of time samples 
-    timeSamples = 100
+    timeSamples = 3600
     # time management
     minTime = 0
-    maxTime = 50
+    maxTime = 3600
     timeColumnName = 'time'
     logarithmicTime = False
     # One or more variables are considered random and "flattened"
-    seedVars = ['seed', 'longseed']
+    seedVars = ['random']
     # Label mapping
     class Measure:
         def __init__(self, description, unit = None):
@@ -230,17 +230,6 @@ if __name__ == '__main__':
         return r'\|' + x + r'\|'
 
     labels = {
-        'nodeCount': Measure(r'$n$', 'nodes'),
-        'harmonicCentrality[Mean]': Measure(f'${expected("H(x)")}$'),
-        'meanNeighbors': Measure(f'${expected(cardinality("N"))}$', 'nodes'),
-        'speed': Measure(r'$\|\vec{v}\|$', r'$m/s$'),
-        'msqer@harmonicCentrality[Max]': Measure(r'$\max{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Min]': Measure(r'$\min{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Mean]': Measure(f'${expected(mse(centrality_label))}$'),
-        'msqer@harmonicCentrality[StandardDeviation]': Measure(f'${stdev_of(mse(centrality_label))}$'),
-        'org:protelis:tutorial:distanceTo[max]': Measure(r'$m$', 'max distance'),
-        'org:protelis:tutorial:distanceTo[mean]': Measure(r'$m$', 'mean distance'),
-        'org:protelis:tutorial:distanceTo[min]': Measure(r'$m$', ',min distance'),
     }
     def derivativeOrMeasure(variable_name):
         if variable_name.endswith('dt'):
@@ -418,10 +407,75 @@ if __name__ == '__main__':
                             for symbol in r".[]\/@:":
                                 figname = figname.replace(symbol, '_')
                             fig.savefig(f'{by_time_output_directory}/{figname}.pdf')
+                            print("Saved")
                             plt.close(fig)
     for experiment in experiments:
         current_experiment_means = means[experiment]
         current_experiment_errors = stdevs[experiment]
         generate_all_charts(current_experiment_means, current_experiment_errors, basedir = f'{experiment}/all')
         
-# Custom charting
+    # Custom charting
+    import pandas as pd
+    import matplotlib
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cmx
+    import matplotlib.font_manager as fm
+
+    matplotlib.rcParams.update({
+        'font.size': 14.5,
+        "text.usetex": True,
+    })
+
+    experiment = means['rescueScenario_export']
+
+    x_time = experiment['time'].to_numpy()
+
+    experiment_homogeneous = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0}, drop=True)
+    experiment_heterogeneous = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
+
+    homo_saved = experiment_homogeneous['saved[sum]'].to_numpy()
+    hetero_saved = experiment_heterogeneous['saved[sum]'].to_numpy()
+
+    # homo_needs_intervention = experiment_homogeneous['needsIntervention[sum]'].to_numpy()
+    # hetero_needs_intervention = experiment_heterogeneous['needsIntervention[sum]'].to_numpy()
+
+    saved_plot = pd.DataFrame(
+        {
+            "time": x_time,
+            "Intervention time [Baseline]": homo_saved,
+            "Intervention time [Modularised]": hetero_saved,
+            # "Pending rescuers [Baseline]": homo_needs_intervention,
+            # "Pending rescuers [Modularised]": hetero_needs_intervention,
+        }
+    )
+
+    ax = saved_plot.plot(
+        x="time",
+        y=["Intervention time [Baseline]", "Intervention time [Modularised]"],
+        xlim=(0, 3700),
+        title="Average intervention time",
+        xlabel="time (s)",
+        ylabel="Waited time (s)",
+        figsize=(10, 6),
+    )
+    ax.title.set_size(24)
+    ax.xaxis.label.set_size(18)
+    ax.yaxis.label.set_size(18)
+    ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    plt.show()
+    #
+    # ax2 = saved_plot.plot(
+    #     x="time",
+    #     y=["Pending rescuers [Baseline]", "Pending rescuers [Modularised]"],
+    #     ylabel="Users waiting intervention",
+    #     xlim=(500, 3700),
+    #     title="Average users waiting intervention",
+    #     xlabel="time (s)",
+    #     figsize=(10, 6),
+    # )
+    #
+    # ax2.title.set_size(24)
+    # ax2.xaxis.label.set_size(18)
+    # ax2.yaxis.label.set_size(18)
+    # ax2.grid(color="gray", linestyle="--", linewidth=0.5)
+    # plt.show()
