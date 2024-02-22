@@ -64,7 +64,7 @@ class SendScafiMessage[T, P <: Position[P]](
   /** Effectively executes this action. */
   override def execute(): Unit = {
     println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} - Sending for program ${program.programNameMolecule.getName}")
-    if (program.isSurrogate) {
+    if (program.isSurrogateForThisProgram) {
       // Skip the send if it is a surrogate
       println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is a surrogate, for ${program.programNameMolecule.getName}")
       program.surrogateForNodes.foreach(nodeId => {
@@ -99,7 +99,7 @@ class SendScafiMessage[T, P <: Position[P]](
 //            println(s"Node ${device.getNode.getId} has received the result from the surrogate ${surrogateNode.getId}")
 //            device.getNode().setConcentration(program.programNameMolecule, computedResult.exportData.root())
 //            // Send the result to the neighbors of the device requesting the result
-//            getNeighborProgramsFromNode(device.getNode).filterNot(_.isSurrogate).foreach(action => {
+//            getNeighborProgramsFromNode(device.getNode).filterNot(_.isSurrogateForThisProgram).foreach(action => {
 //              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId}")
 //              action.sendExport(device.getNode.getId, computedResult)
 //            })
@@ -109,18 +109,18 @@ class SendScafiMessage[T, P <: Position[P]](
 //        }
 //      })
       program.prepareForComputationalCycle
-    } else {
+    } else if(program.shouldExecuteThisProgram && !program.isSurrogateForSomeProgram) {
       // ----------------- ORIGINAL CODE -----------------
-      if (!program.isSurrogate) {
-        println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} (surrogato? ${program.isSurrogate}) is the owner of program ${program.programNameMolecule.getName}, " +
+        println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} (surrogato? ${program.isSurrogateForSomeProgram}) is the owner of program ${program.programNameMolecule.getName}, " +
           s"sending result to nbrs ${environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala.map(_.getId).toList}")
         // ----------------- ORIGINAL CODE -----------------
         val toSend = program.getExport(device.getNode.getId).get
         getNeighborProgramsFromNode(device.getNode).foreach(action => {
           action.sendExport(device.getNode.getId, toSend)
         })
-      }
-
+      program.prepareForComputationalCycle
+    } else {
+      // do nothing (e.g., a surrogate for a program that is not offloaded to it)
       program.prepareForComputationalCycle
     }
   }

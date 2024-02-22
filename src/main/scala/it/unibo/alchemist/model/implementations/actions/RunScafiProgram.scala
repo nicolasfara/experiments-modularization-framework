@@ -56,7 +56,8 @@ sealed class RunScafiProgram[T, P <: Position[P]](
   val offloadingMapping: Map[(String, Int), Int] = node.getConcentration(new SimpleMolecule("offloadingMapping"))
     .asInstanceOf[Iterable[((String, Int), Int)]]
     .toMap
-  val isSurrogate = offloadingMapping.values.exists(_ == node.getId) // offloadingMapping.exists(kv => kv._1._1 == programName && kv._2 == node.getId)
+  val isSurrogateForSomeProgram = offloadingMapping.values.exists(_ == node.getId)
+  val isSurrogateForThisProgram = offloadingMapping.exists(kv => kv._1._1 == programName && kv._2 == node.getId)
   val shouldExecuteThisProgram = !offloadingMapping
     .exists { case ((program, source), _) => source == node.getId && program == programName }
 
@@ -184,7 +185,7 @@ sealed class RunScafiProgram[T, P <: Position[P]](
       return
     }
 
-    if (isSurrogate) {
+    if (isSurrogateForThisProgram) {
       // Surrogate node must execute the program for all the nodes that have forwarded the program to it
       surrogateForNodes.foreach(deviceId => {
         // If the context for the node is available, execute the program, otherwise skip to the next cycle

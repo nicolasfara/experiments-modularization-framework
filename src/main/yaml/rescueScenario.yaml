@@ -40,7 +40,7 @@ variables:
         (1 to ${totalNodes.asInstanceOf[Int]})
           .map(i => ("it.unibo.sim.EmergencyService" -> i) -> 0)
           .toMap
-      } else Map()
+      } else Map(("it.unibo.sim.SteeringService",0)->0)
       """
 #  offloadingMapping: &offloadingMapping
 #    language: scala
