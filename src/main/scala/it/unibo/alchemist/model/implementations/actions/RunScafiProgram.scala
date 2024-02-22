@@ -53,10 +53,10 @@ sealed class RunScafiProgram[T, P <: Position[P]](
 
   def asMolecule = programNameMolecule
 
-  val offloadingMapping = node.getConcentration(new SimpleMolecule("offloadingMapping"))
+  val offloadingMapping: Map[(String, Int), Int] = node.getConcentration(new SimpleMolecule("offloadingMapping"))
     .asInstanceOf[Iterable[((String, Int), Int)]]
     .toMap
-  val isSurrogate = offloadingMapping.values.exists(_ == node.getId)
+  val isSurrogate = offloadingMapping.values.exists(_ == node.getId) // offloadingMapping.exists(kv => kv._1._1 == programName && kv._2 == node.getId)
   val shouldExecuteThisProgram = !offloadingMapping
     .exists { case ((program, source), _) => source == node.getId && program == programName }
 

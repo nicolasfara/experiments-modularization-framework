@@ -63,18 +63,20 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
-    println(s"Sending for program ${program.programNameMolecule.getName} - time: ${environment.getSimulation.getTime}")
+    println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} - Sending for program ${program.programNameMolecule.getName}")
     if (program.isSurrogate) {
       // Skip the send if it is a surrogate
-      println(s"Node ${device.getNode.getId} is a surrogate - time: ${environment.getSimulation.getTime}")
+      println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is a surrogate, for ${program.programNameMolecule.getName}")
       program.surrogateForNodes.foreach(nodeId => {
-        println(s"Node ${device.getNode.getId} is a surrogate, setting the result for the node $nodeId - time: ${environment.getSimulation.getTime}")
+        println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is a surrogate for ${program.programNameMolecule.getName}, setting the result for the node $nodeId")
         val currentNode = environment.getNodeByID(nodeId)
         program.getResultFor(nodeId) match {
           case Some(computedResult) =>
+            println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is sending the result of ${program.programNameMolecule.getName} " +
+              s" to nbrs ${environment.getNeighborhood(currentNode).getNeighbors.iterator().asScala.map(_.getId).toList}")
             currentNode.setConcentration(program.programNameMolecule, computedResult.exportData.root())
             getNeighborProgramsFromNode(currentNode).foreach(action => {
-              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId} - time: ${environment.getSimulation.getTime}")
+              // println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is sending the result of ${program.programNameMolecule.getName} to nbr ${action.nodeManager.node.getId}")
               action.sendExport(nodeId, computedResult)
             })
             getSurrogateProgramFromNode(currentNode).foreach(action => action.sendExport(nodeId, computedResult))
@@ -83,11 +85,11 @@ class SendScafiMessage[T, P <: Position[P]](
       })
 
       program.prepareForComputationalCycle
-      return
+
     }
-    if (!program.shouldExecuteThisProgram) {
+    else if (!program.shouldExecuteThisProgram) {
       // Get program from surrogate
-      println(s"Node ${device.getNode.getId} is not the owner of the program, getting the result from the surrogate - time: ${environment.getSimulation.getTime}")
+      println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is not the owner of program ${program.programNameMolecule.getName}, getting result from surrogate")
 //      val surrogateNode = getSurrogateNode(program)
 //      getSurrogateProgramFromNode(surrogateNode).foreach(surrogateProgram => {
 //        println(s"Node ${device.getNode.getId} is getting the result from the surrogate ${surrogateNode.getId}")
@@ -107,17 +109,20 @@ class SendScafiMessage[T, P <: Position[P]](
 //        }
 //      })
       program.prepareForComputationalCycle
-      return
+    } else {
+      // ----------------- ORIGINAL CODE -----------------
+      if (!program.isSurrogate) {
+        println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} (surrogato? ${program.isSurrogate}) is the owner of program ${program.programNameMolecule.getName}, " +
+          s"sending result to nbrs ${environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala.map(_.getId).toList}")
+        // ----------------- ORIGINAL CODE -----------------
+        val toSend = program.getExport(device.getNode.getId).get
+        getNeighborProgramsFromNode(device.getNode).foreach(action => {
+          action.sendExport(device.getNode.getId, toSend)
+        })
+      }
+
+      program.prepareForComputationalCycle
     }
-
-    println(s"Node ${device.getNode.getId} is the owner of the program, sending the result to the neighbors - time: ${environment.getSimulation.getTime}")
-    // ----------------- ORIGINAL CODE -----------------
-    val toSend = program.getExport(device.getNode.getId).get
-    getNeighborProgramsFromNode(device.getNode).foreach(action => {
-      action.sendExport(device.getNode.getId, toSend)
-    })
-
-    program.prepareForComputationalCycle
   }
 
   private def getSurrogateNode(program: RunScafiProgram[T, P]): Node[T] = {
