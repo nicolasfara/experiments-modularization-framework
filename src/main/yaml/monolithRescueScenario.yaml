@@ -10,61 +10,37 @@ _constants:
 variables:
   random: &random
     min: 0
-    max: 40
+    max: 4
     step: 1
     default: 2
-  scenarioType: # 0 = monolithic, 1 = modularization
-    type: ArbitraryVariable
-    parameters: [1, [0, 1]]
   nodeSide: &nodeSide
     type: ArbitraryVariable
     parameters: [10, [5, 10]]
 
   # -- Effectively final variables
-  emergencyServiceProgramRate: &emergencyServiceProgramRate
-    language: scala
-    formula: |
-      if (scenarioType == 0) 1.0 else 15.0
-  steeringServiceProgramRate: &steeringServiceProgramRate
-    language: scala
-    formula: 1.0
   totalNodes:
     language: scala
     formula: Math.pow(nodeSide.asInstanceOf[Int], 2).toInt - 1
   offloadingMapping: &offloadingMapping
     language: scala
     formula: |
-      s"""
-      if ($scenarioType == 1) {
-        (1 to ${totalNodes.asInstanceOf[Int]})
-          .map(i => ("it.unibo.sim.EmergencyService" -> i) -> 0)
-          .toMap
-      } else Map()
-      """
+      Map()
 
 seeds:
   scenario: *random
   simulation: *random
 
 network-model:
-  type: ConnectWithinDistanceAndCloud
-  parameters: [*neighborRange, *cloudNode]
+  type: ConnectWithinDistance
+  parameters: [*neighborRange]
 
 _reactions:
-  - program: &emergencyService
-    - time-distribution: *emergencyServiceProgramRate
+  - program: &monolithProgram
+    - time-distribution: 1.0
       type: Event
       actions:
         - type: RunScafiProgram
-          parameters: [it.unibo.sim.EmergencyService, *retentionTime]
-    - program: send
-
-  - program: &steeringService
-    - time-distribution: *steeringServiceProgramRate
-      type: Event
-      actions:
-        - type: RunScafiProgram
-          parameters: [it.unibo.sim.SteeringService, *retentionTime]
+          parameters: [it.unibo.sim.MonolithProgram, *retentionTime]
     - program: send
 
   - pool: &movement
@@ -88,8 +64,7 @@ deployments: ## i.e, how to place nodes
   type: Grid
   parameters: [0, 0, *nodeSide, *nodeSide, 1, 1, 0.5, 0.5]
   programs:
-    - *emergencyService
-    - *steeringService
+    - *monolithProgram
     - *movement
   contents:
     - molecule: offloadingMapping
@@ -101,7 +76,7 @@ export:
   - type: CSVExporter
     parameters:
       exportPath: data
-      fileNameRoot: rescueScenario_export
+      fileNameRoot: monolithRescueScenario
       interval: 10
     data:
       - time

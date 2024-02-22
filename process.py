@@ -435,6 +435,10 @@ if __name__ == '__main__':
 
     homo_saved = experiment_homogeneous['saved[sum]'].to_numpy()
     hetero_saved = experiment_heterogeneous['saved[sum]'].to_numpy()
+
+    homo_time = experiment_homogeneous['requiredInterventionTime[mean]'].to_numpy()
+    hetero_time = experiment_heterogeneous['requiredInterventionTime[mean]'].to_numpy()
+
     homo_messages = experiment_homogeneous['messagesCount[sum]'].to_numpy()
     hetero_messages = experiment_heterogeneous['messagesCount[sum]'].to_numpy()
 
@@ -448,6 +452,14 @@ if __name__ == '__main__':
             "Modularised": hetero_saved,
             # "Pending rescuers [Baseline]": homo_needs_intervention,
             # "Pending rescuers [Modularised]": hetero_needs_intervention,
+        }
+    )
+
+    time_plot = pd.DataFrame(
+        {
+            "time": x_time,
+            "Baseline": homo_time,
+            "Modularised": hetero_time,
         }
     )
 
@@ -468,6 +480,21 @@ if __name__ == '__main__':
         title="Average saved users",
         xlabel="time (s)",
         ylabel="Saved users",
+        figsize=(10, 6),
+    )
+    ax.title.set_size(24)
+    ax.xaxis.label.set_size(18)
+    ax.yaxis.label.set_size(18)
+    ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    plt.show()
+
+    ax = time_plot.plot(
+        x="time",
+        y=["Baseline", "Modularised"],
+        xlim=(0, 3700),
+        title="Required intervention time",
+        xlabel="time (s)",
+        ylabel="Intervention time (s)",
         figsize=(10, 6),
     )
     ax.title.set_size(24)

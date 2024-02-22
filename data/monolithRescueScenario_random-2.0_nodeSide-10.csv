@@ -1,0 +1,10 @@
+#####################################################################
+# Alchemist log file - simulation started at: 2024-02-21T21:47+0000 #
+#####################################################################
+#
+# random = 2.0, nodeSide = 10
+#
+# The columns have the following meaning: 
+# time requiredInterventionTime[min] requiredInterventionTime[max] requiredInterventionTime[mean] requiredInterventionTime[variance] needsIntervention[sum] needsIntervention[variance] messagesCount[sum] messagesCount[mean] saved[sum] 
+0.0 NaN NaN NaN NaN 0.0 NaN 0.0 NaN 0.0
+0.0 NaN NaN NaN NaN 0.0 NaN 0.0 NaN 0.0

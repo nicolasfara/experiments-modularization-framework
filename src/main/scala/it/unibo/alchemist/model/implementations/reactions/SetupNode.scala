@@ -41,16 +41,17 @@ class SetupNode[T, P <: Position[P]](
     // select rescuer and user nodes
     val candidate = (1 until environment.getNodeCount).toList
 
-    val rescuerNodes = generateUniqueRandomSequence(1, 99, Math.ceil(environment.getNodeCount * 0.10).toInt).toList
+    val rescuerNodes = generateUniqueRandomSequence(1, environment.getNodeCount - 1, Math.ceil(environment.getNodeCount * 0.10).toInt).toList
+    println(s"Rescuer nodes: $rescuerNodes")
     val userNodes = candidate.diff(rescuerNodes)
+    println(s"User nodes: $userNodes")
 
     userNodes.foreach(environment.getNodeByID(_).setConcentration(isUser, true.asInstanceOf[T]))
     rescuerNodes.foreach(environment.getNodeByID(_).setConcentration(isRescuer, true.asInstanceOf[T]))
 
     val nodesRequiringIntervention = fisherYatesShuffle(userNodes).take(Math.ceil(userNodes.size * 0.50).toInt)
     nodesRequiringIntervention.foreach { userNode =>
-      val interventionTime = randomGenerator.nextDouble() * terminationTime
-      println(s"Node $userNode requires intervention at time $interventionTime")
+      val interventionTime = randomGenerator.nextDouble() * (terminationTime * 0.75)
       environment.getNodeByID(userNode).setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
     }
 
