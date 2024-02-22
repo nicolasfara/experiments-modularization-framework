@@ -68,13 +68,13 @@ class SendScafiMessage[T, P <: Position[P]](
       // Skip the send if it is a surrogate
       println(s"Node ${device.getNode.getId} is a surrogate - time: ${environment.getSimulation.getTime}")
       program.surrogateForNodes.foreach(nodeId => {
-        println(s"Node ${device.getNode.getId} is a surrogate, setting the result for the node $nodeId")
+        println(s"Node ${device.getNode.getId} is a surrogate, setting the result for the node $nodeId - time: ${environment.getSimulation.getTime}")
         val currentNode = environment.getNodeByID(nodeId)
         program.getResultFor(nodeId) match {
           case Some(computedResult) =>
             currentNode.setConcentration(program.programNameMolecule, computedResult.exportData.root())
             getNeighborProgramsFromNode(currentNode).foreach(action => {
-              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId}")
+              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId} - time: ${environment.getSimulation.getTime}")
               action.sendExport(nodeId, computedResult)
             })
             getSurrogateProgramFromNode(currentNode).foreach(action => action.sendExport(nodeId, computedResult))
