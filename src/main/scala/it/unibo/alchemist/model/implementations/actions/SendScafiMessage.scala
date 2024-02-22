@@ -15,6 +15,7 @@ import it.unibo.alchemist.model.implementations.nodes.ScafiDevice
 import it.unibo.alchemist.model._
 import it.unibo.alchemist.model.actions.AbstractAction
 import it.unibo.alchemist.model.molecules.SimpleMolecule
+import org.slf4j.LoggerFactory
 
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters._
@@ -62,25 +63,26 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
-//    val messagesMolecule = new SimpleMolecule("messagesCount")
-//    if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
-//      device.getNode().setConcentration(messagesMolecule, 0.asInstanceOf[T])
-//    }
     if (program.isSurrogate) {
       // Skip the send if it is a surrogate
+      println(s"Node ${device.getNode.getId} is a surrogate, skipping the send")
       program.prepareForComputationalCycle
       return
     }
     if (!program.shouldExecuteThisProgram) {
       // Get program from surrogate
+      println(s"Node ${device.getNode.getId} is not the owner of the program, getting the result from the surrogate")
       val surrogateNode = getSurrogateNode(program)
       getSurrogateProgramFromNode(surrogateNode).foreach(surrogateProgram => {
+        println(s"Node ${device.getNode.getId} is getting the result from the surrogate ${surrogateNode.getId}")
         // Write the result of the surrogate program to the node requesting the result
         surrogateProgram.getResultFor(device.getNode.getId) match {
           case Some(computedResult) =>
+            println(s"Node ${device.getNode.getId} has received the result from the surrogate ${surrogateNode.getId}")
             device.getNode().setConcentration(program.programNameMolecule, computedResult.exportData.root())
             // Send the result to the neighbors of the device requesting the result
             getNeighborProgramsFromNode(device.getNode).filterNot(_.isSurrogate).foreach(action => {
+              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId}")
               action.sendExport(device.getNode.getId, computedResult)
             })
             // Send to self the result
@@ -88,26 +90,17 @@ class SendScafiMessage[T, P <: Position[P]](
           case _ => () // Skip the message sending if the surrogate has not computed the result yet
         }
       })
-      // Set the number of messages sent
-//      if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
-//        val messages = environment.getNeighborhood(device.getNode()).size() + 2 // +2 because of the communication with the surrogate
-//        val prevMessages = device.getNode().getConcentration(messagesMolecule).asInstanceOf[Int]
-//        device.getNode().setConcentration(messagesMolecule, (messages + prevMessages).asInstanceOf[T])
-//      }
       program.prepareForComputationalCycle
       return
     }
 
+    println(s"Node ${device.getNode.getId} is the owner of the program, sending the result to the neighbors")
     // ----------------- ORIGINAL CODE -----------------
     val toSend = program.getExport(device.getNode.getId).get
     getNeighborProgramsFromNode(device.getNode).foreach(action => {
       action.sendExport(device.getNode.getId, toSend)
     })
-//    if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
-//      val messages = getNeighborProgramsFromNode(device.getNode()).size
-//      val prevMessages = device.getNode().getConcentration(messagesMolecule).asInstanceOf[Int]
-//      device.getNode().setConcentration(messagesMolecule, (messages + prevMessages).asInstanceOf[T])
-//    }
+
     program.prepareForComputationalCycle
   }
 
