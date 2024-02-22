@@ -184,13 +184,13 @@ if __name__ == '__main__':
     # How to name the summary of the processed data
     pickleOutput = 'data_summary'
     # Experiment prefixes: one per experiment (root of the file name)
-    experiments = ['rescueScenario_export']
+    experiments = ['rescue_vector']
     floatPrecision = '{: 0.3f}'
     # Number of time samples 
-    timeSamples = 3600
+    timeSamples = 100
     # time management
     minTime = 0
-    maxTime = 3600
+    maxTime = 100
     timeColumnName = 'time'
     logarithmicTime = False
     # One or more variables are considered random and "flattened"
@@ -418,68 +418,31 @@ if __name__ == '__main__':
     import pandas as pd
     import matplotlib
     import matplotlib.pyplot as plt
-    import matplotlib.cm as cmx
-    import matplotlib.font_manager as fm
 
-    matplotlib.rcParams.update({
-        'font.size': 14.5,
-        "text.usetex": True,
-    })
+    experiment = means['rescue_vector']
 
-    experiment = means['rescueScenario_export']
+    monolith = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0}, drop=True)
+    modularised = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
 
-    x_time = experiment['time'].to_numpy()
+    x_time = monolith['time'].to_numpy()
+    monolith_errors = monolith['rmsError[sum]'].to_numpy()
+    modularised_errors = modularised['rmsError[sum]'].to_numpy()
 
-    experiment_homogeneous = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0}, drop=True)
-    experiment_heterogeneous = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
-
-    homo_saved = experiment_homogeneous['saved[sum]'].to_numpy()
-    hetero_saved = experiment_heterogeneous['saved[sum]'].to_numpy()
-
-    homo_time = experiment_homogeneous['requiredInterventionTime[mean]'].to_numpy()
-    hetero_time = experiment_heterogeneous['requiredInterventionTime[mean]'].to_numpy()
-
-    homo_messages = experiment_homogeneous['messagesCount[sum]'].to_numpy()
-    hetero_messages = experiment_heterogeneous['messagesCount[sum]'].to_numpy()
-
-    # homo_needs_intervention = experiment_homogeneous['needsIntervention[sum]'].to_numpy()
-    # hetero_needs_intervention = experiment_heterogeneous['needsIntervention[sum]'].to_numpy()
-
-    saved_plot = pd.DataFrame(
+    errors_plot = pd.DataFrame(
         {
             "time": x_time,
-            "Baseline": homo_saved,
-            "Modularised": hetero_saved,
-            # "Pending rescuers [Baseline]": homo_needs_intervention,
-            # "Pending rescuers [Modularised]": hetero_needs_intervention,
+            "Monolithic": monolith_errors,
+            "Modularised": modularised_errors,
         }
     )
 
-    time_plot = pd.DataFrame(
-        {
-            "time": x_time,
-            "Baseline": homo_time,
-            "Modularised": hetero_time,
-        }
-    )
-
-    messages_plot = pd.DataFrame(
-        {
-            "time": x_time,
-            "Baseline": homo_messages,
-            "Modularised": hetero_messages,
-            # "Pending rescuers [Baseline]": homo_needs_intervention,
-            # "Pending rescuers [Modularised]": hetero_needs_intervention,
-        }
-    )
-
-    ax = saved_plot.plot(
+    ax = errors_plot.plot(
         x="time",
-        y=["Baseline", "Modularised"],
-        xlim=(0, 3700),
-        title="Average saved users",
+        y=["Monolithic", "Modularised"],
+        # xlim=(950, 1020),
+        title="RMS Error",
         xlabel="time (s)",
-        ylabel="Saved users",
+        ylabel="RMS Error",
         figsize=(10, 6),
     )
     ax.title.set_size(24)
@@ -488,34 +451,104 @@ if __name__ == '__main__':
     ax.grid(color="gray", linestyle="--", linewidth=0.5)
     plt.show()
 
-    ax = time_plot.plot(
-        x="time",
-        y=["Baseline", "Modularised"],
-        xlim=(0, 3700),
-        title="Required intervention time",
-        xlabel="time (s)",
-        ylabel="Intervention time (s)",
-        figsize=(10, 6),
-    )
-    ax.title.set_size(24)
-    ax.xaxis.label.set_size(18)
-    ax.yaxis.label.set_size(18)
-    ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    plt.show()
 
-    ax = messages_plot.plot(
-        x="time",
-        y=["Baseline", "Modularised"],
-        xlim=(0, 3700),
-        ylim=(700, 1000),
-        title="Messages per seconds",
-        xlabel="time (s)",
-        ylabel="Messages",
-        figsize=(10, 6),
-    )
-    ax.title.set_size(24)
-    ax.xaxis.label.set_size(18)
-    ax.yaxis.label.set_size(18)
-    ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    plt.show()
+    #
+    # matplotlib.rcParams.update({
+    #     'font.size': 14.5,
+    #     "text.usetex": True,
+    # })
+    #
+    # experiment = means['rescueScenario_export']
+    #
+    # x_time = experiment['time'].to_numpy()
+    #
+    # experiment_homogeneous = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0}, drop=True)
+    # experiment_heterogeneous = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
+    #
+    # homo_saved = experiment_homogeneous['saved[sum]'].to_numpy()
+    # hetero_saved = experiment_heterogeneous['saved[sum]'].to_numpy()
+    #
+    # homo_time = experiment_homogeneous['requiredInterventionTime[mean]'].to_numpy()
+    # hetero_time = experiment_heterogeneous['requiredInterventionTime[mean]'].to_numpy()
+    #
+    # homo_messages = experiment_homogeneous['messagesCount[sum]'].to_numpy()
+    # hetero_messages = experiment_heterogeneous['messagesCount[sum]'].to_numpy()
+    #
+    # saved_plot = pd.DataFrame(
+    #     {
+    #         "time": x_time,
+    #         "Baseline": homo_saved,
+    #         "Modularised": hetero_saved,
+    #     }
+    # )
+    #
+    # intervention_time_plot = pd.DataFrame(
+    #     {
+    #         "time": x_time,
+    #         "Baseline": homo_time,
+    #         "Modularised": hetero_time,
+    #     }
+    # )
+    #
+    # time_plot = pd.DataFrame(
+    #     {
+    #         "time": x_time,
+    #         "Baseline": homo_time,
+    #         "Modularised": hetero_time,
+    #     }
+    # )
+    #
+    # messages_plot = pd.DataFrame(
+    #     {
+    #         "time": x_time,
+    #         "Baseline": homo_messages,
+    #         "Modularised": hetero_messages,
+    #     }
+    # )
+    #
+    # ax = saved_plot.plot(
+    #     x="time",
+    #     y=["Baseline", "Modularised"],
+    #     xlim=(0, 3700),
+    #     title="Average saved users",
+    #     xlabel="time (s)",
+    #     ylabel="Saved users",
+    #     figsize=(10, 6),
+    # )
+    # ax.title.set_size(24)
+    # ax.xaxis.label.set_size(18)
+    # ax.yaxis.label.set_size(18)
+    # ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    # plt.show()
+    #
+    # ax = time_plot.plot(
+    #     x="time",
+    #     y=["Baseline", "Modularised"],
+    #     xlim=(0, 3700),
+    #     title="Required intervention time",
+    #     xlabel="time (s)",
+    #     ylabel="Intervention time (s)",
+    #     figsize=(10, 6),
+    # )
+    # ax.title.set_size(24)
+    # ax.xaxis.label.set_size(18)
+    # ax.yaxis.label.set_size(18)
+    # ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    # plt.show()
+    #
+    # ax = messages_plot.plot(
+    #     x="time",
+    #     y=["Baseline", "Modularised"],
+    #     xlim=(0, 3700),
+    #     ylim=(700, 1000),
+    #     title="Messages exchanged",
+    #     xlabel="time (s)",
+    #     ylabel="Messages",
+    #     figsize=(10, 6),
+    # )
+    # ax.title.set_size(24)
+    # ax.xaxis.label.set_size(18)
+    # ax.yaxis.label.set_size(18)
+    # ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    # plt.show()
 

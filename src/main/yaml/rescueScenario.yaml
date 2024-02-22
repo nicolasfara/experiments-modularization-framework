@@ -5,12 +5,12 @@ _constants:
   neighborRange: &neighborRange 1.5
   cloudNode: &cloudNode 0
   movementSpeed: &movementSpeed 0.005 # m/s
-  terminationTime: &terminationTime 3600 # 1 hour
+  terminationTime: &terminationTime 100 # 1 hour
 
 variables:
   random: &random
     min: 0
-    max: 40
+    max: 4
     step: 1
     default: 2
   scenarioType: # 0 = monolithic, 1 = modularization
@@ -24,10 +24,11 @@ variables:
   emergencyServiceProgramRate: &emergencyServiceProgramRate
     language: scala
     formula: |
-      if (scenarioType == 0) 1.0 else 15.0
+      if (scenarioType == 0) 0.5 else 0.5
   steeringServiceProgramRate: &steeringServiceProgramRate
     language: scala
-    formula: 1.0
+    formula: |
+      if (scenarioType == 0) 0.5 else 0.5
   totalNodes:
     language: scala
     formula: Math.pow(nodeSide.asInstanceOf[Int], 2).toInt - 1
@@ -41,6 +42,16 @@ variables:
           .toMap
       } else Map()
       """
+#  offloadingMapping: &offloadingMapping
+#    language: scala
+#    formula: |
+#      s"""
+#      if ($scenarioType == 1) {
+#        (1 to ${totalNodes.asInstanceOf[Int]})
+#          .map(i => ("it.unibo.sim.EmergencyService" -> i) -> 0)
+#          .toMap
+#      } else Map()
+#      """
 
 seeds:
   scenario: *random
@@ -67,13 +78,6 @@ _reactions:
           parameters: [it.unibo.sim.SteeringService, *retentionTime]
     - program: send
 
-  - pool: &movement
-    - time-distribution: 10
-      type: Event
-      actions:
-        - type: MoveToTarget
-          parameters: [ movementTarget, *movementSpeed ]
-
 environment:
   type: Continuous2DEnvironment
   parameters: []
@@ -88,34 +92,23 @@ deployments: ## i.e, how to place nodes
   type: Grid
   parameters: [0, 0, *nodeSide, *nodeSide, 1, 1, 0.5, 0.5]
   programs:
-    - *emergencyService
     - *steeringService
-    - *movement
+    - *emergencyService
+#    - *movement
   contents:
     - molecule: offloadingMapping
       concentration: *offloadingMapping
-    - molecule: movementTarget
-      concentration: (0, 0)
 
 export:
   - type: CSVExporter
     parameters:
       exportPath: data
-      fileNameRoot: rescueScenario_export
-      interval: 10
+      fileNameRoot: rescue_vector
+      interval: 1
     data:
       - time
-      - molecule: requiredInterventionTime
-        aggregators: [ min, max, mean, variance ]
-        value-filter: onlyfinite
-      - molecule: needsIntervention
-        aggregators: [ sum, variance ]
-        value-filter: onlyfinite
-      - molecule: messagesCount
-        aggregators: [ sum, mean ]
-        value-filter: onlyfinite
-      - molecule: saved
-        aggregators: [ sum ]
+      - molecule: rmsError
+        aggregators: [ product, sum, mean, variance ]
         value-filter: onlyfinite
 
 terminate:

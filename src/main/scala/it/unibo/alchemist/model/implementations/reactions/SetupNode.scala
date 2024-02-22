@@ -12,7 +12,7 @@ class SetupNode[T, P <: Position[P]](
   randomGenerator: RandomGenerator,
   seed: Int,
   cloudId: Int,
-  terminationTime: Double = 3600,
+  terminationTime: Double,
 ) extends AbstractGlobalReaction[T, P](environment, distribution) {
 
   private val sourceNode = new SimpleMolecule("source")
@@ -42,16 +42,15 @@ class SetupNode[T, P <: Position[P]](
     val candidate = (1 until environment.getNodeCount).toList
 
     val rescuerNodes = generateUniqueRandomSequence(1, environment.getNodeCount - 1, Math.ceil(environment.getNodeCount * 0.10).toInt).toList
-    println(s"Rescuer nodes: $rescuerNodes")
     val userNodes = candidate.diff(rescuerNodes)
-    println(s"User nodes: $userNodes")
 
     userNodes.foreach(environment.getNodeByID(_).setConcentration(isUser, true.asInstanceOf[T]))
     rescuerNodes.foreach(environment.getNodeByID(_).setConcentration(isRescuer, true.asInstanceOf[T]))
 
-    val nodesRequiringIntervention = fisherYatesShuffle(userNodes).take(Math.ceil(userNodes.size * 0.50).toInt)
-    nodesRequiringIntervention.foreach { userNode =>
-      val interventionTime = randomGenerator.nextDouble() * (terminationTime * 0.75)
+    val needsIntervention = 2
+    val nodesRequiringIntervention = fisherYatesShuffle(userNodes).take(needsIntervention)
+    nodesRequiringIntervention.zipWithIndex.foreach { case (userNode, index) =>
+      val interventionTime = index * (terminationTime / needsIntervention) + 10
       environment.getNodeByID(userNode).setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
     }
 
@@ -79,13 +78,13 @@ class SetupNode[T, P <: Position[P]](
   }
 
   private def fisherYatesShuffle[TT](arr: List[TT]): List[TT] = {
-    val buff = arr.toBuffer
-    for (i <- buff.length - 1 to 1 by -1) {
+    val array = arr.toBuffer
+    for (i <- array.indices.reverse) {
       val j = randomGenerator.nextInt(i + 1)
-      val temp = buff(i)
-      buff(i) = buff(j)
-      buff(j) = temp
+      val temp = array(j)
+      array(j) = array(i)
+      array(i) = temp
     }
-    buff.toList
+    array.toList
   }
 }

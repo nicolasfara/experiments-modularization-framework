@@ -62,10 +62,10 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
-    val messagesMolecule = new SimpleMolecule("messagesCount")
-    if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
-      device.getNode().setConcentration(messagesMolecule, 0.asInstanceOf[T])
-    }
+//    val messagesMolecule = new SimpleMolecule("messagesCount")
+//    if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
+//      device.getNode().setConcentration(messagesMolecule, 0.asInstanceOf[T])
+//    }
     if (program.isSurrogate) {
       // Skip the send if it is a surrogate
       program.prepareForComputationalCycle
@@ -80,7 +80,7 @@ class SendScafiMessage[T, P <: Position[P]](
           case Some(computedResult) =>
             device.getNode().setConcentration(program.programNameMolecule, computedResult.exportData.root())
             // Send the result to the neighbors of the device requesting the result
-            getNeighborProgramsFromNode(device.getNode).foreach(action => {
+            getNeighborProgramsFromNode(device.getNode).filterNot(_.isSurrogate).foreach(action => {
               action.sendExport(device.getNode.getId, computedResult)
             })
             // Send to self the result
@@ -89,11 +89,11 @@ class SendScafiMessage[T, P <: Position[P]](
         }
       })
       // Set the number of messages sent
-      if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
-        val messages = environment.getNeighborhood(device.getNode()).size() + 2 // +2 because of the communication with the surrogate
-        val prevMessages = device.getNode().getConcentration(messagesMolecule).asInstanceOf[Int]
-        device.getNode().setConcentration(messagesMolecule, (messages + prevMessages).asInstanceOf[T])
-      }
+//      if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
+//        val messages = environment.getNeighborhood(device.getNode()).size() + 2 // +2 because of the communication with the surrogate
+//        val prevMessages = device.getNode().getConcentration(messagesMolecule).asInstanceOf[Int]
+//        device.getNode().setConcentration(messagesMolecule, (messages + prevMessages).asInstanceOf[T])
+//      }
       program.prepareForComputationalCycle
       return
     }
@@ -103,11 +103,11 @@ class SendScafiMessage[T, P <: Position[P]](
     getNeighborProgramsFromNode(device.getNode).foreach(action => {
       action.sendExport(device.getNode.getId, toSend)
     })
-    if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
-      val messages = getNeighborProgramsFromNode(device.getNode()).size
-      val prevMessages = device.getNode().getConcentration(messagesMolecule).asInstanceOf[Int]
-      device.getNode().setConcentration(messagesMolecule, (messages + prevMessages).asInstanceOf[T])
-    }
+//    if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyService") {
+//      val messages = getNeighborProgramsFromNode(device.getNode()).size
+//      val prevMessages = device.getNode().getConcentration(messagesMolecule).asInstanceOf[Int]
+//      device.getNode().setConcentration(messagesMolecule, (messages + prevMessages).asInstanceOf[T])
+//    }
     program.prepareForComputationalCycle
   }
 
