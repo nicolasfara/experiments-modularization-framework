@@ -63,38 +63,54 @@ class SendScafiMessage[T, P <: Position[P]](
 
   /** Effectively executes this action. */
   override def execute(): Unit = {
+    println(s"Sending for program ${program.programNameMolecule.getName} - time: ${environment.getSimulation.getTime}")
     if (program.isSurrogate) {
       // Skip the send if it is a surrogate
-      println(s"Node ${device.getNode.getId} is a surrogate, skipping the send")
+      println(s"Node ${device.getNode.getId} is a surrogate - time: ${environment.getSimulation.getTime}")
+      program.surrogateForNodes.foreach(nodeId => {
+        println(s"Node ${device.getNode.getId} is a surrogate, setting the result for the node $nodeId")
+        val currentNode = environment.getNodeByID(nodeId)
+        program.getResultFor(nodeId) match {
+          case Some(computedResult) =>
+            currentNode.setConcentration(program.programNameMolecule, computedResult.exportData.root())
+            getNeighborProgramsFromNode(currentNode).foreach(action => {
+              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId}")
+              action.sendExport(nodeId, computedResult)
+            })
+            getSurrogateProgramFromNode(currentNode).foreach(action => action.sendExport(nodeId, computedResult))
+          case None => () // Skip the message sending if the surrogate has not computed the result yet
+        }
+      })
+
       program.prepareForComputationalCycle
       return
     }
     if (!program.shouldExecuteThisProgram) {
       // Get program from surrogate
-      println(s"Node ${device.getNode.getId} is not the owner of the program, getting the result from the surrogate")
-      val surrogateNode = getSurrogateNode(program)
-      getSurrogateProgramFromNode(surrogateNode).foreach(surrogateProgram => {
-        println(s"Node ${device.getNode.getId} is getting the result from the surrogate ${surrogateNode.getId}")
-        // Write the result of the surrogate program to the node requesting the result
-        surrogateProgram.getResultFor(device.getNode.getId) match {
-          case Some(computedResult) =>
-            println(s"Node ${device.getNode.getId} has received the result from the surrogate ${surrogateNode.getId}")
-            device.getNode().setConcentration(program.programNameMolecule, computedResult.exportData.root())
-            // Send the result to the neighbors of the device requesting the result
-            getNeighborProgramsFromNode(device.getNode).filterNot(_.isSurrogate).foreach(action => {
-              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId}")
-              action.sendExport(device.getNode.getId, computedResult)
-            })
-            // Send to self the result
-            program.sendExport(device.getNode.getId, computedResult)
-          case _ => () // Skip the message sending if the surrogate has not computed the result yet
-        }
-      })
+      println(s"Node ${device.getNode.getId} is not the owner of the program, getting the result from the surrogate - time: ${environment.getSimulation.getTime}")
+//      val surrogateNode = getSurrogateNode(program)
+//      getSurrogateProgramFromNode(surrogateNode).foreach(surrogateProgram => {
+//        println(s"Node ${device.getNode.getId} is getting the result from the surrogate ${surrogateNode.getId}")
+//        // Write the result of the surrogate program to the node requesting the result
+//        surrogateProgram.getResultFor(device.getNode.getId) match {
+//          case Some(computedResult) =>
+//            println(s"Node ${device.getNode.getId} has received the result from the surrogate ${surrogateNode.getId}")
+//            device.getNode().setConcentration(program.programNameMolecule, computedResult.exportData.root())
+//            // Send the result to the neighbors of the device requesting the result
+//            getNeighborProgramsFromNode(device.getNode).filterNot(_.isSurrogate).foreach(action => {
+//              println(s"Node ${device.getNode.getId} is sending the result to the neighbor ${action.nodeManager.node.getId}")
+//              action.sendExport(device.getNode.getId, computedResult)
+//            })
+//            // Send to self the result
+//            program.sendExport(device.getNode.getId, computedResult)
+//          case _ => () // Skip the message sending if the surrogate has not computed the result yet
+//        }
+//      })
       program.prepareForComputationalCycle
       return
     }
 
-    println(s"Node ${device.getNode.getId} is the owner of the program, sending the result to the neighbors")
+    println(s"Node ${device.getNode.getId} is the owner of the program, sending the result to the neighbors - time: ${environment.getSimulation.getTime}")
     // ----------------- ORIGINAL CODE -----------------
     val toSend = program.getExport(device.getNode.getId).get
     getNeighborProgramsFromNode(device.getNode).foreach(action => {
