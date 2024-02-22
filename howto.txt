@@ -1,0 +1,2 @@
+python plotter.py plots/plot.yml data/ .*csv rescue_vector plots/
+./showImgs.sh plots/ rescue 2 rescue
