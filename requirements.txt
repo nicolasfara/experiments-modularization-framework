@@ -1,5 +1,4 @@
 matplotlib ==3.8.2
 xarray ==2024.1.1
 pandas ==2.2.0
-ruamel.yaml ==0.17.16
 

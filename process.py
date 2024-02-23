@@ -412,7 +412,7 @@ if __name__ == '__main__':
     for experiment in experiments:
         current_experiment_means = means[experiment]
         current_experiment_errors = stdevs[experiment]
-        generate_all_charts(current_experiment_means, current_experiment_errors, basedir = f'{experiment}/all')
+        # generate_all_charts(current_experiment_means, current_experiment_errors, basedir = f'{experiment}/all')
         
     # Custom charting
     import pandas as pd
@@ -421,7 +421,7 @@ if __name__ == '__main__':
 
     experiment = means['rescue_vector']
 
-    monolith = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0}, drop=True)
+    monolith = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0, "variableRate": 3.0}, drop=True)
     modularised = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
 
     x_time = monolith['time'].to_numpy()
@@ -432,17 +432,19 @@ if __name__ == '__main__':
         {
             "time": x_time,
             "Monolithic": monolith_errors,
-            "Modularised": modularised_errors,
+            "Modularised (3 Hz)": modularised_errors[0],
+            "Modularised (5 Hz)": modularised_errors[1],
+            "Modularised (10 Hz)": modularised_errors[2],
         }
     )
 
     ax = errors_plot.plot(
         x="time",
-        y=["Monolithic", "Modularised"],
+        y=["Monolithic", "Modularised (3 Hz)", "Modularised (5 Hz)", "Modularised (10 Hz)"],
         # xlim=(950, 1020),
-        title="RMS Error",
+        title="User intervention error estimation",
         xlabel="time (s)",
-        ylabel="RMS Error",
+        ylabel="Estimation error",
         figsize=(10, 6),
     )
     ax.title.set_size(24)
