@@ -5,7 +5,7 @@ _constants:
   neighborRange: &neighborRange 1.5
   cloudNode: &cloudNode 0
   movementSpeed: &movementSpeed 0.005 # m/s
-  terminationTime: &terminationTime 100 # 1 hour
+  terminationTime: &terminationTime 3600 # 1 hour
 
 variables:
   random: &random
@@ -60,7 +60,7 @@ _reactions:
       type: Event
       actions:
         - type: RunScafiProgram
-          parameters: [it.unibo.sim.EmergencyService, *retentionTime]
+          parameters: [it.unibo.sim.EmergencyGradientService, *retentionTime]
     - program: send
 
   - program: &steeringService
@@ -68,8 +68,15 @@ _reactions:
       type: Event
       actions:
         - type: RunScafiProgram
-          parameters: [it.unibo.sim.SteeringService, *retentionTime]
+          parameters: [it.unibo.sim.MovementService, *retentionTime]
     - program: send
+
+  - pool: &movement
+      - time-distribution: 10
+        type: Event
+        actions:
+          - type: MoveToTarget
+            parameters: [ movementTarget, *movementSpeed ]
 
 environment:
   type: Continuous2DEnvironment
@@ -87,10 +94,12 @@ deployments: ## i.e, how to place nodes
   programs:
     - *steeringService
     - *emergencyService
-#    - *movement
+    - *movement
   contents:
     - molecule: offloadingMapping
       concentration: *offloadingMapping
+    - molecule: movementTarget
+      concentration: (0, 0)
 
 export:
   - type: CSVExporter

@@ -10,15 +10,10 @@ class SetupNode[T, P <: Position[P]](
   environment: Environment[T, P],
   distribution: TimeDistribution[T],
   randomGenerator: RandomGenerator,
-  seed: Int,
   cloudId: Int,
   terminationTime: Double,
 ) extends AbstractGlobalReaction[T, P](environment, distribution) {
 
-  private val sourceNode = new SimpleMolecule("source")
-  private val isSource = new SimpleMolecule("isSource")
-  private val destinationNode = new SimpleMolecule("destination")
-  private val isDestination = new SimpleMolecule("isDestination")
   private val isCloud = new SimpleMolecule("isCloud")
   private val isOffloading = new SimpleMolecule("isOffloading")
   private val offloadingMapping = new SimpleMolecule("offloadingMapping")
