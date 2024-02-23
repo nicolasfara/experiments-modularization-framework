@@ -85,7 +85,7 @@ environment:
     - time-distribution:
         type: Trigger
         parameters: [ 0 ]
-      type: SetupNode
+      type: SetupNodeMovement
       parameters: [ *cloudNode, *terminationTime ]
 
 deployments: ## i.e, how to place nodes
@@ -105,12 +105,12 @@ export:
   - type: CSVExporter
     parameters:
       exportPath: data
-      fileNameRoot: rescue_vector
+      fileNameRoot: messages_exchanged
       interval: 1
     data:
       - time
-      - molecule: rmsError
-        aggregators: [ product, sum, mean, variance ]
+      - molecule: messagesExchanged
+        aggregators: [ sum, variance ]
         value-filter: onlyfinite
 
 terminate:

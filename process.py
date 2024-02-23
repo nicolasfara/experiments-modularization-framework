@@ -184,7 +184,7 @@ if __name__ == '__main__':
     # How to name the summary of the processed data
     pickleOutput = 'data_summary'
     # Experiment prefixes: one per experiment (root of the file name)
-    experiments = ['rescue_vector']
+    experiments = ['rescue_vector', 'messages_exchanged']
     floatPrecision = '{: 0.3f}'
     # Number of time samples 
     timeSamples = 100
@@ -420,9 +420,13 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     experiment = means['rescue_vector']
+    messages = means["messages_exchanged"]
 
     monolith = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0, "variableRate": 3.0}, drop=True)
     modularised = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
+
+    monolith_messages = messages.sel({"scenarioType": 0.0, "nodeSide": 10.0, "variableRate": 10.0}, drop=True)
+    modularised_messages = messages.sel({"scenarioType": 1.0, "nodeSide": 10.0, "variableRate": 10.0}, drop=True)
 
     x_time = monolith['time'].to_numpy()
     monolith_errors = monolith['rmsError[sum]'].to_numpy()
@@ -438,19 +442,44 @@ if __name__ == '__main__':
         }
     )
 
+    messages_plot = pd.DataFrame(
+        {
+            "time": x_time,
+            "Monolithic": monolith_messages['messagesExchanged[sum]'].to_numpy(),
+            "Modularised": modularised_messages['messagesExchanged[sum]'].to_numpy(),
+        }
+    )
+
     ax = errors_plot.plot(
         x="time",
         y=["Monolithic", "Modularised (3 Hz)", "Modularised (5 Hz)", "Modularised (10 Hz)"],
         # xlim=(950, 1020),
-        title="User intervention error estimation",
+        title="Intervention detection error",
         xlabel="time (s)",
-        ylabel="Estimation error",
+        ylabel="Detected errors",
         figsize=(10, 6),
     )
-    ax.title.set_size(24)
-    ax.xaxis.label.set_size(18)
-    ax.yaxis.label.set_size(18)
+    ax.title.set_size(18)
+    ax.xaxis.label.set_size(14)
+    ax.yaxis.label.set_size(14)
     ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    plt.savefig(f'{output_directory}/rescue_vector/detection-errors.pdf')
+    plt.show()
+
+    ax = messages_plot.plot(
+        x="time",
+        y=["Monolithic", "Modularised"],
+        ylim=(662, 664),
+        title="Messages exchanged",
+        xlabel="time (s)",
+        ylabel="Messages",
+        figsize=(10, 6),
+    )
+    ax.title.set_size(18)
+    ax.xaxis.label.set_size(14)
+    ax.yaxis.label.set_size(14)
+    ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    plt.savefig(f'{output_directory}/rescue_vector/messages-exchanged.pdf')
     plt.show()
 
 

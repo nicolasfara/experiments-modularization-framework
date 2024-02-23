@@ -70,6 +70,12 @@ class SendScafiMessage[T, P <: Position[P]](
       program.surrogateForNodes.foreach(nodeId => {
 //        println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is a surrogate for ${program.programNameMolecule.getName}, setting the result for the node $nodeId")
         val currentNode = environment.getNodeByID(nodeId)
+
+        if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyGradientService") {
+          val messagesExchanged = environment.getNeighborhood(currentNode).size() + 2
+          currentNode.setConcentration(new SimpleMolecule("messagesExchanged"), messagesExchanged.asInstanceOf[T])
+        }
+
         program.getResultFor(nodeId) match {
           case Some(computedResult) =>
 //            println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} is sending the result of ${program.programNameMolecule.getName} " +
@@ -109,6 +115,10 @@ class SendScafiMessage[T, P <: Position[P]](
 //      })
 //      program.prepareForComputationalCycle
     } else if(program.shouldExecuteThisProgram && !program.isSurrogateForSomeProgram) {
+      if (program.programNameMolecule.getName == "it.unibo.sim.EmergencyGradientService") {
+        val messagesExchanged = environment.getNeighborhood(device.getNode()).size()
+        device.getNode().setConcentration(new SimpleMolecule("messagesExchanged"), messagesExchanged.asInstanceOf[T])
+      }
       // ----------------- ORIGINAL CODE -----------------
 //      println(s"[${environment.getSimulation.getTime}] Node ${device.getNode.getId} (surrogato? ${program.isSurrogateForSomeProgram}) is the owner of program ${program.programNameMolecule.getName}, " +
 //        s"sending result to nbrs ${environment.getNeighborhood(device.getNode).getNeighbors.iterator().asScala.map(_.getId).toList}")
