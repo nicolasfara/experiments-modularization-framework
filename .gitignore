@@ -8,3 +8,4 @@ data_summary_*
 timeprocessed
 .metals
 .vscode/
+env/

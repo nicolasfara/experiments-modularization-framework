@@ -10,25 +10,28 @@ _constants:
 variables:
   random: &random
     min: 0
-    max: 4
+    max: 10
     step: 1
     default: 2
-  scenarioType: # 0 = monolithic, 1 = modularization
+  scenarioType: &scenarioType # 0 = monolithic, 1 = modularization
     type: ArbitraryVariable
     parameters: [1, [0, 1]]
   nodeSide: &nodeSide
     type: ArbitraryVariable
     parameters: [10, [5, 10]]
+  variableRate: &variableRate
+    type: ArbitraryVariable
+    parameters: [3, [3, 5, 10]]
 
   # -- Effectively final variables
   emergencyServiceProgramRate: &emergencyServiceProgramRate
     language: scala
     formula: |
-      if (scenarioType == 0) 0.5 else 0.5
+      if (scenarioType == 0) 0.4 else variableRate
   steeringServiceProgramRate: &steeringServiceProgramRate
     language: scala
     formula: |
-      if (scenarioType == 0) 0.5 else 0.5
+      if (scenarioType == 0) 0.4 else 0.5
   totalNodes:
     language: scala
     formula: Math.pow(nodeSide.asInstanceOf[Int], 2).toInt - 1
@@ -40,18 +43,9 @@ variables:
         (1 to ${totalNodes.asInstanceOf[Int]})
           .map(i => ("it.unibo.sim.EmergencyService" -> i) -> 0)
           .toMap
-      } else Map(("it.unibo.sim.SteeringService",0)->0)
+        // Map(("it.unibo.sim.EmergencyService", 2) -> 0)
+      } else Map(("it.unibo.sim.SteeringService", 0) -> 0)
       """
-#  offloadingMapping: &offloadingMapping
-#    language: scala
-#    formula: |
-#      s"""
-#      if ($scenarioType == 1) {
-#        (1 to ${totalNodes.asInstanceOf[Int]})
-#          .map(i => ("it.unibo.sim.EmergencyService" -> i) -> 0)
-#          .toMap
-#      } else Map()
-#      """
 
 seeds:
   scenario: *random
