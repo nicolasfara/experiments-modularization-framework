@@ -10,7 +10,7 @@ _constants:
 variables:
   random: &random
     min: 0
-    max: 10
+    max: 200
     step: 1
     default: 2
   scenarioType: &scenarioType # 0 = monolithic, 1 = modularization

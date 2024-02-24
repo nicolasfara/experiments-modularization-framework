@@ -435,7 +435,7 @@ if __name__ == '__main__':
     errors_plot = pd.DataFrame(
         {
             "time": x_time,
-            "Monolithic": monolith_errors,
+            "Monolithic (1 Hz)": monolith_errors,
             "Modularised (3 Hz)": modularised_errors[0],
             "Modularised (5 Hz)": modularised_errors[1],
             "Modularised (10 Hz)": modularised_errors[2],
@@ -450,9 +450,12 @@ if __name__ == '__main__':
         }
     )
 
+    custom_charts_output_directory = f'{output_directory}/rescue_vector'
+    Path(custom_charts_output_directory).mkdir(parents=True, exist_ok=True)
+
     ax = errors_plot.plot(
         x="time",
-        y=["Monolithic", "Modularised (3 Hz)", "Modularised (5 Hz)", "Modularised (10 Hz)"],
+        y=["Monolithic (1 Hz)", "Modularised (3 Hz)", "Modularised (5 Hz)", "Modularised (10 Hz)"],
         # xlim=(950, 1020),
         title="Intervention detection error",
         xlabel="time (s)",
@@ -463,7 +466,7 @@ if __name__ == '__main__':
     ax.xaxis.label.set_size(14)
     ax.yaxis.label.set_size(14)
     ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    plt.savefig(f'{output_directory}/rescue_vector/detection-errors.pdf')
+    plt.savefig(f'{custom_charts_output_directory}/detection-errors.pdf')
     plt.show()
 
     ax = messages_plot.plot(
@@ -479,7 +482,7 @@ if __name__ == '__main__':
     ax.xaxis.label.set_size(14)
     ax.yaxis.label.set_size(14)
     ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    plt.savefig(f'{output_directory}/rescue_vector/messages-exchanged.pdf')
+    plt.savefig(f'{custom_charts_output_directory}/messages-exchanged.pdf')
     plt.show()
 
 
