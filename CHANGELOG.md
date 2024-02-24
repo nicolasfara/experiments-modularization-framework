@@ -1,3 +1,40 @@
+## 1.0.0 (2024-02-24)
+
+
+### Bug Fixes
+
+* add guard on Infinity value for the channel ([029134e](https://github.com/nicolasfara/experiments-modularization-framework/commit/029134e0611dc0e69a3894edc152d1ef12cfbb87))
+* fix danysk smarmellamentos ([785e5b2](https://github.com/nicolasfara/experiments-modularization-framework/commit/785e5b238b3da653b942add1b930b20e194024c1))
+* missing self sending message for the state ([e2d8c7e](https://github.com/nicolasfara/experiments-modularization-framework/commit/e2d8c7eb3f20cad013f9e4036eaf48a406a303fe))
+* pass the right node instead hard-coded node from outer scope ([bf01ad7](https://github.com/nicolasfara/experiments-modularization-framework/commit/bf01ad7a174dc73a0c06aa25751501f300faec4a))
+
+
+### Build and continuous integration
+
+* add dockerhub username ([e5175e9](https://github.com/nicolasfara/experiments-modularization-framework/commit/e5175e9fd0600c45c5fa44cf6324c16f967a4340))
+
+
+### General maintenance
+
+* add more comments ([9e3a782](https://github.com/nicolasfara/experiments-modularization-framework/commit/9e3a78247f8a21be9a294ffa6569b3a44cdc9ff2))
+* disable old simulation ([27e304b](https://github.com/nicolasfara/experiments-modularization-framework/commit/27e304be4d779f18078535629e4a12ee158f226d))
+* make node 0 cloud node ([bbc0cae](https://github.com/nicolasfara/experiments-modularization-framework/commit/bbc0cae4e52c77d2d1b21519c74da4b9ca5e983b))
+* mark node requesting offload ([147278e](https://github.com/nicolasfara/experiments-modularization-framework/commit/147278e2e344e67f92a502d03e001703031ad202))
+* **simulation:** add two nodes requiring offload ([26758fe](https://github.com/nicolasfara/experiments-modularization-framework/commit/26758fe4ec270db9efaf792cd32c57753419f80b))
+* update username ([24e8436](https://github.com/nicolasfara/experiments-modularization-framework/commit/24e84364562ab95eff3693396fbf53e96b91c073))
+
+
+### Style improvements
+
+* mark nodes requiring offload ([2340b07](https://github.com/nicolasfara/experiments-modularization-framework/commit/2340b07620646dd34ca669fd768c8302872eb857))
+* remove boilerplate ([3e5e0ef](https://github.com/nicolasfara/experiments-modularization-framework/commit/3e5e0ef61fc03caa9bb52836c291e53269c22278))
+* remove unused import ([18fc34b](https://github.com/nicolasfara/experiments-modularization-framework/commit/18fc34b5ec750b62f4154d48625abd839a79e7ab))
+
+
+### Refactoring
+
+* code refactoring to make more clear the logic ([9ebadf5](https://github.com/nicolasfara/experiments-modularization-framework/commit/9ebadf574b8d74e6c3d56172effae7ea922ac73d))
+
 ## [1.2.0](https://github.com/DanySK/alchemist-experiments-bootstrap/compare/1.1.3...1.2.0) (2023-05-05)
 
 
