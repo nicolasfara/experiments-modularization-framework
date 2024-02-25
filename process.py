@@ -419,6 +419,14 @@ if __name__ == '__main__':
     import matplotlib
     import matplotlib.pyplot as plt
 
+    plt.rc('font', size=10) #controls default text size
+    plt.rc('axes', titlesize=12) #fontsize of the title
+    plt.rc('axes', labelsize=11) #fontsize of the x and y labels
+    plt.rc('xtick', labelsize=12) #fontsize of the x tick labels
+    plt.rc('ytick', labelsize=12) #fontsize of the y tick labels
+    plt.rc('legend', fontsize=13) #fontsize of the legend
+    plt.rc('lines', linewidth=2.5) #fontsize of the legend
+
     experiment = means['rescue_vector']
     messages = means["messages_exchanged"]
 
@@ -457,7 +465,7 @@ if __name__ == '__main__':
         x="time",
         y=["Monolithic (1 Hz)", "Modularised (3 Hz)", "Modularised (5 Hz)", "Modularised (10 Hz)"],
         # xlim=(950, 1020),
-        title="Intervention detection error",
+        title="Detection Error and Convergence Time",
         xlabel="time (s)",
         ylabel="Detected errors",
         figsize=(10, 6),
@@ -468,121 +476,19 @@ if __name__ == '__main__':
     ax.grid(color="gray", linestyle="--", linewidth=0.5)
     plt.savefig(f'{custom_charts_output_directory}/detection-errors.pdf')
     plt.show()
-
-    ax = messages_plot.plot(
-        x="time",
-        y=["Monolithic", "Modularised"],
-        ylim=(662, 664),
-        title="Messages exchanged",
-        xlabel="time (s)",
-        ylabel="Messages",
-        figsize=(10, 6),
-    )
-    ax.title.set_size(18)
-    ax.xaxis.label.set_size(14)
-    ax.yaxis.label.set_size(14)
-    ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    plt.savefig(f'{custom_charts_output_directory}/messages-exchanged.pdf')
-    plt.show()
-
-
-    #
-    # matplotlib.rcParams.update({
-    #     'font.size': 14.5,
-    #     "text.usetex": True,
-    # })
-    #
-    # experiment = means['rescueScenario_export']
-    #
-    # x_time = experiment['time'].to_numpy()
-    #
-    # experiment_homogeneous = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0}, drop=True)
-    # experiment_heterogeneous = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
-    #
-    # homo_saved = experiment_homogeneous['saved[sum]'].to_numpy()
-    # hetero_saved = experiment_heterogeneous['saved[sum]'].to_numpy()
-    #
-    # homo_time = experiment_homogeneous['requiredInterventionTime[mean]'].to_numpy()
-    # hetero_time = experiment_heterogeneous['requiredInterventionTime[mean]'].to_numpy()
-    #
-    # homo_messages = experiment_homogeneous['messagesCount[sum]'].to_numpy()
-    # hetero_messages = experiment_heterogeneous['messagesCount[sum]'].to_numpy()
-    #
-    # saved_plot = pd.DataFrame(
-    #     {
-    #         "time": x_time,
-    #         "Baseline": homo_saved,
-    #         "Modularised": hetero_saved,
-    #     }
-    # )
-    #
-    # intervention_time_plot = pd.DataFrame(
-    #     {
-    #         "time": x_time,
-    #         "Baseline": homo_time,
-    #         "Modularised": hetero_time,
-    #     }
-    # )
-    #
-    # time_plot = pd.DataFrame(
-    #     {
-    #         "time": x_time,
-    #         "Baseline": homo_time,
-    #         "Modularised": hetero_time,
-    #     }
-    # )
-    #
-    # messages_plot = pd.DataFrame(
-    #     {
-    #         "time": x_time,
-    #         "Baseline": homo_messages,
-    #         "Modularised": hetero_messages,
-    #     }
-    # )
-    #
-    # ax = saved_plot.plot(
-    #     x="time",
-    #     y=["Baseline", "Modularised"],
-    #     xlim=(0, 3700),
-    #     title="Average saved users",
-    #     xlabel="time (s)",
-    #     ylabel="Saved users",
-    #     figsize=(10, 6),
-    # )
-    # ax.title.set_size(24)
-    # ax.xaxis.label.set_size(18)
-    # ax.yaxis.label.set_size(18)
-    # ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    # plt.show()
-    #
-    # ax = time_plot.plot(
-    #     x="time",
-    #     y=["Baseline", "Modularised"],
-    #     xlim=(0, 3700),
-    #     title="Required intervention time",
-    #     xlabel="time (s)",
-    #     ylabel="Intervention time (s)",
-    #     figsize=(10, 6),
-    # )
-    # ax.title.set_size(24)
-    # ax.xaxis.label.set_size(18)
-    # ax.yaxis.label.set_size(18)
-    # ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    # plt.show()
     #
     # ax = messages_plot.plot(
     #     x="time",
-    #     y=["Baseline", "Modularised"],
-    #     xlim=(0, 3700),
-    #     ylim=(700, 1000),
+    #     y=["Monolithic", "Modularised"],
+    #     ylim=(662, 664),
     #     title="Messages exchanged",
     #     xlabel="time (s)",
     #     ylabel="Messages",
     #     figsize=(10, 6),
     # )
-    # ax.title.set_size(24)
-    # ax.xaxis.label.set_size(18)
-    # ax.yaxis.label.set_size(18)
+    # ax.title.set_size(18)
+    # ax.xaxis.label.set_size(14)
+    # ax.yaxis.label.set_size(14)
     # ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    # plt.savefig(f'{custom_charts_output_directory}/messages-exchanged.pdf')
     # plt.show()
-
