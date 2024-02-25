@@ -464,7 +464,6 @@ if __name__ == '__main__':
     ax = errors_plot.plot(
         x="time",
         y=["Monolithic (1 Hz)", "Modularised (3 Hz)", "Modularised (5 Hz)", "Modularised (10 Hz)"],
-        # xlim=(950, 1020),
         title="Detection Error and Convergence Time",
         xlabel="time (s)",
         ylabel="Detected errors",
