@@ -1,5 +1,7 @@
 # experiments-modularization-framework
 
+This repository contains the code and data for the experiments in the paper "On the Coordination of Multi-Tier Field-Based Applications"
+
 ## Reproduce the entire experiment
 
 **WARNING**: re-running the whole experiment may take a very long time on a normal computer.
