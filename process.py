@@ -184,13 +184,13 @@ if __name__ == '__main__':
     # How to name the summary of the processed data
     pickleOutput = 'data_summary'
     # Experiment prefixes: one per experiment (root of the file name)
-    experiments = ['rescue_vector', 'messages_exchanged']
+    experiments = ['rescue_vector', 'messages_exchanged', 'saved_users']
     floatPrecision = '{: 0.3f}'
     # Number of time samples 
-    timeSamples = 100
+    timeSamples = 1600
     # time management
     minTime = 0
-    maxTime = 100
+    maxTime = 1600
     timeColumnName = 'time'
     logarithmicTime = False
     # One or more variables are considered random and "flattened"
@@ -428,13 +428,13 @@ if __name__ == '__main__':
     plt.rc('lines', linewidth=2.5) #fontsize of the legend
 
     experiment = means['rescue_vector']
-    messages = means["messages_exchanged"]
+    saved = means['saved_users']
 
     monolith = experiment.sel({"scenarioType": 0.0, "nodeSide": 10.0, "variableRate": 3.0}, drop=True)
     modularised = experiment.sel({"scenarioType": 1.0, "nodeSide": 10.0}, drop=True)
 
-    monolith_messages = messages.sel({"scenarioType": 0.0, "nodeSide": 10.0, "variableRate": 10.0}, drop=True)
-    modularised_messages = messages.sel({"scenarioType": 1.0, "nodeSide": 10.0, "variableRate": 10.0}, drop=True)
+    monolith_saved = saved.sel({"scenarioType": 0.0, "nodeSide": 10.0, "variableRate": 5.0}, drop=True)
+    modularised_saved = saved.sel({"scenarioType": 1.0, "nodeSide": 10.0, "variableRate": 5.0}, drop=True)
 
     x_time = monolith['time'].to_numpy()
     monolith_errors = monolith['rmsError[sum]'].to_numpy()
@@ -450,15 +450,15 @@ if __name__ == '__main__':
         }
     )
 
-    messages_plot = pd.DataFrame(
+    saved_plot = pd.DataFrame(
         {
             "time": x_time,
-            "Monolithic": monolith_messages['messagesExchanged[sum]'].to_numpy(),
-            "Modularised": modularised_messages['messagesExchanged[sum]'].to_numpy(),
+            "Monolithic": monolith_saved['saved[sum]'].to_numpy(),
+            "Modularised": modularised_saved['saved[sum]'].to_numpy(),
         }
     )
 
-    custom_charts_output_directory = f'{output_directory}/rescue_vector'
+    custom_charts_output_directory = f'{output_directory}'
     Path(custom_charts_output_directory).mkdir(parents=True, exist_ok=True)
 
     ax = errors_plot.plot(
@@ -467,6 +467,7 @@ if __name__ == '__main__':
         title="Detection Error and Convergence Time",
         xlabel="time (s)",
         ylabel="Detected errors",
+        xlim=(0, 100),
         figsize=(10, 6),
     )
     ax.title.set_size(18)
@@ -475,19 +476,18 @@ if __name__ == '__main__':
     ax.grid(color="gray", linestyle="--", linewidth=0.5)
     plt.savefig(f'{custom_charts_output_directory}/detection-errors.pdf')
     plt.show()
-    #
-    # ax = messages_plot.plot(
-    #     x="time",
-    #     y=["Monolithic", "Modularised"],
-    #     ylim=(662, 664),
-    #     title="Messages exchanged",
-    #     xlabel="time (s)",
-    #     ylabel="Messages",
-    #     figsize=(10, 6),
-    # )
-    # ax.title.set_size(18)
-    # ax.xaxis.label.set_size(14)
-    # ax.yaxis.label.set_size(14)
-    # ax.grid(color="gray", linestyle="--", linewidth=0.5)
-    # plt.savefig(f'{custom_charts_output_directory}/messages-exchanged.pdf')
-    # plt.show()
+
+    ax = saved_plot.plot(
+        x="time",
+        y=["Monolithic", "Modularised"],
+        title="Saved users",
+        xlabel="time (s)",
+        ylabel="Saved users",
+        figsize=(10, 6),
+    )
+    ax.title.set_size(18)
+    ax.xaxis.label.set_size(14)
+    ax.yaxis.label.set_size(14)
+    ax.grid(color="gray", linestyle="--", linewidth=0.5)
+    plt.savefig(f'{custom_charts_output_directory}/saved-users.pdf')
+    plt.show()
