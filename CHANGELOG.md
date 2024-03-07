@@ -1,3 +1,53 @@
+## 1.0.0 (2024-03-07)
+
+
+### Bug Fixes
+
+* add guard on Infinity value for the channel ([029134e](https://github.com/nicolasfara/experiments-modularization-framework/commit/029134e0611dc0e69a3894edc152d1ef12cfbb87))
+* fix contants code in simulations ([9526655](https://github.com/nicolasfara/experiments-modularization-framework/commit/9526655fba66d9c3d714484167f44cfa2f29ef01))
+* fix danysk smarmellamentos ([785e5b2](https://github.com/nicolasfara/experiments-modularization-framework/commit/785e5b238b3da653b942add1b930b20e194024c1))
+* improve plotting script ([a00adae](https://github.com/nicolasfara/experiments-modularization-framework/commit/a00adae7cff4f5c8dba80ed199dc08e62d3e5877))
+* improve plotting script ([21674c2](https://github.com/nicolasfara/experiments-modularization-framework/commit/21674c2537aee90050b225c815bb87720ad83f0f))
+* missing self sending message for the state ([e2d8c7e](https://github.com/nicolasfara/experiments-modularization-framework/commit/e2d8c7eb3f20cad013f9e4036eaf48a406a303fe))
+* pass the right node instead hard-coded node from outer scope ([bf01ad7](https://github.com/nicolasfara/experiments-modularization-framework/commit/bf01ad7a174dc73a0c06aa25751501f300faec4a))
+
+
+### Documentation
+
+* update readme ([c7ff062](https://github.com/nicolasfara/experiments-modularization-framework/commit/c7ff062b1f71165b943165f65de7572a93b71df6))
+
+
+### Build and continuous integration
+
+* add dockerhub username ([e5175e9](https://github.com/nicolasfara/experiments-modularization-framework/commit/e5175e9fd0600c45c5fa44cf6324c16f967a4340))
+
+
+### General maintenance
+
+* add data ([d7181d1](https://github.com/nicolasfara/experiments-modularization-framework/commit/d7181d182beb9e8f73603b35e2d690ab67a75d63))
+* add more comments ([9e3a782](https://github.com/nicolasfara/experiments-modularization-framework/commit/9e3a78247f8a21be9a294ffa6569b3a44cdc9ff2))
+* disable old simulation ([27e304b](https://github.com/nicolasfara/experiments-modularization-framework/commit/27e304be4d779f18078535629e4a12ee158f226d))
+* improve plot script ([155f42d](https://github.com/nicolasfara/experiments-modularization-framework/commit/155f42d90343558b5551844df6ed01745c463b98))
+* make node 0 cloud node ([bbc0cae](https://github.com/nicolasfara/experiments-modularization-framework/commit/bbc0cae4e52c77d2d1b21519c74da4b9ca5e983b))
+* mark node requesting offload ([147278e](https://github.com/nicolasfara/experiments-modularization-framework/commit/147278e2e344e67f92a502d03e001703031ad202))
+* **release:** 1.0.0 [skip ci] ([8abdc67](https://github.com/nicolasfara/experiments-modularization-framework/commit/8abdc67749d955c66fe8b0372b729601fd9adc90))
+* **release:** 1.0.0 [skip ci] ([506d548](https://github.com/nicolasfara/experiments-modularization-framework/commit/506d5486b8ff9f84c4f54983a4f9b3f28bb65be1))
+* **release:** update gradle.properties .env versions to 1.0.0 [skip ci] ([282a3dc](https://github.com/nicolasfara/experiments-modularization-framework/commit/282a3dc9d1988150bc032c42697d83f30dbdb26e))
+* **simulation:** add two nodes requiring offload ([26758fe](https://github.com/nicolasfara/experiments-modularization-framework/commit/26758fe4ec270db9efaf792cd32c57753419f80b))
+* update username ([24e8436](https://github.com/nicolasfara/experiments-modularization-framework/commit/24e84364562ab95eff3693396fbf53e96b91c073))
+
+
+### Style improvements
+
+* mark nodes requiring offload ([2340b07](https://github.com/nicolasfara/experiments-modularization-framework/commit/2340b07620646dd34ca669fd768c8302872eb857))
+* remove boilerplate ([3e5e0ef](https://github.com/nicolasfara/experiments-modularization-framework/commit/3e5e0ef61fc03caa9bb52836c291e53269c22278))
+* remove unused import ([18fc34b](https://github.com/nicolasfara/experiments-modularization-framework/commit/18fc34b5ec750b62f4154d48625abd839a79e7ab))
+
+
+### Refactoring
+
+* code refactoring to make more clear the logic ([9ebadf5](https://github.com/nicolasfara/experiments-modularization-framework/commit/9ebadf574b8d74e6c3d56172effae7ea922ac73d))
+
 ## 1.0.0 (2024-02-25)
 
 
