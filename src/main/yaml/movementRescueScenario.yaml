@@ -5,12 +5,12 @@ _constants:
   neighborRange: &neighborRange 1.5
   cloudNode: &cloudNode 0
   movementSpeed: &movementSpeed 0.005 # m/s
-  terminationTime: &terminationTime 3600 # 1 hour
+  terminationTime: &terminationTime 1600 # 1 hour
 
 variables:
   random: &random
     min: 0
-    max: 10
+    max: 4
     step: 1
     default: 2
   scenarioType: &scenarioType # 0 = monolithic, 1 = modularization
@@ -105,11 +105,11 @@ export:
   - type: CSVExporter
     parameters:
       exportPath: data
-      fileNameRoot: messages_exchanged
+      fileNameRoot: saved_users
       interval: 1
     data:
       - time
-      - molecule: messagesExchanged
+      - molecule: saved
         aggregators: [ sum, variance ]
         value-filter: onlyfinite
 

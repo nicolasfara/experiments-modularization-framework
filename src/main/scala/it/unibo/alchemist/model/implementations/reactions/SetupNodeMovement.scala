@@ -40,7 +40,7 @@ class SetupNodeMovement[T, P <: Position[P]](
     userNodes.foreach(environment.getNodeByID(_).setConcentration(isUser, true.asInstanceOf[T]))
     rescuerNodes.foreach(environment.getNodeByID(_).setConcentration(isRescuer, true.asInstanceOf[T]))
 
-    val nodesRequiringIntervention = fisherYatesShuffle(userNodes).take(Math.ceil(userNodes.size * 0.10).toInt)
+    val nodesRequiringIntervention = fisherYatesShuffle(userNodes).take(Math.ceil(userNodes.size * 0.30).toInt)
     nodesRequiringIntervention.zipWithIndex.foreach { case (userNode, _) =>
       val interventionTime = randomGenerator.nextDouble() * terminationTime
       environment.getNodeByID(userNode).setConcentration(new SimpleMolecule("interventionTime"), interventionTime.asInstanceOf[T])
