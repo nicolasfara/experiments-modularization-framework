@@ -11,7 +11,7 @@ This repository contains the code and data for the experiments in the paper "On 
 We recommend the following software requirements to run the experiments:
 
 - **JDK**: >=17
-- **Docker**: 25.0.2
+- **Docker**: 25.0.2 (optional)
 - **Python**: 3.12.1
 
 ### Reproduce with containers (recommended)
