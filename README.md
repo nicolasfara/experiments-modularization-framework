@@ -6,6 +6,14 @@ This repository contains the code and data for the experiments in the paper "On 
 
 **WARNING**: re-running the whole experiment may take a very long time on a normal computer.
 
+### Software requirements
+
+We recommend the following software requirements to run the experiments:
+
+- **JDK**: >=17
+- **Docker**: 25.0.2
+- **Python**: 3.12.1
+
 ### Reproduce with containers (recommended)
 
 1. Install docker and docker-compose
