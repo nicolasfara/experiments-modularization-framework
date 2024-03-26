@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/nicolasfara/experiments-modularization-framework/compare/1.0.0...1.0.1) (2024-03-26)
+
+
+### Bug Fixes
+
+* fix taskSize to match the amount of memory occupied by each simulation ([2512712](https://github.com/nicolasfara/experiments-modularization-framework/commit/251271282a211007c3ce09ab8a3519a67817ba86))
+
 ## 1.0.0 (2024-03-07)
 
 
