@@ -14,6 +14,8 @@ We recommend the following software requirements to run the experiments:
 - **Docker**: 25.0.2 (optional)
 - **Python**: 3.12.1
 
+When running the simulation batch, we recommend using a machine with at least 16GB of RAM.
+
 ### Reproduce with containers (recommended)
 
 1. Install docker and docker-compose
